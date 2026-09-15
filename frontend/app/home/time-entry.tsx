@@ -19,7 +19,7 @@ import { Calendar } from 'react-native-calendars';
 import { api } from '@/src/utils/api';
 import { useAuth } from '@/src/contexts/AuthContext';
 import { useTheme } from '@/src/contexts/ThemeContext';
-import * as FileSystem from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 interface TimeEntry {
@@ -68,6 +68,14 @@ export default function TimeEntryScreen() {
     loadData();
     loadCategories();
     loadClassifications();
+  }, [selectedDate]);
+
+  // Real-time cross-device sync via polling every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
+    return () => clearInterval(interval);
   }, [selectedDate]);
 
   const loadData = async () => {

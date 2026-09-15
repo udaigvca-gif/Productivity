@@ -68,6 +68,14 @@ export default function HabitsScreen() {
     loadData();
   }, [viewMode]);
 
+  // Real-time cross-device sync via polling every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [viewMode]);
+
   const loadData = async () => {
     try {
       if (viewMode === 'habits') {
@@ -389,10 +397,7 @@ export default function HabitsScreen() {
                   </View>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                     <TouchableOpacity
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        handleToggleAddToDaily(habit);
-                      }}
+                      onPress={() => handleToggleAddToDaily(habit)}
                       testID={`toggle-daily-${habit.habit_id}`}
                     >
                       <Ionicons

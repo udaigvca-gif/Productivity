@@ -57,8 +57,21 @@ class ApiClient {
     });
   }
 
-  async deleteTask(taskId: string) {
-    return this.request(`/api/tasks/${taskId}`, {
+  async deleteTask(taskId: string, mode?: 'series' | 'single', date?: string) {
+    let query = '';
+    if (mode) query += `?mode=${mode}`;
+    if (date) query += `${query ? '&' : '?'}date=${date}`;
+    return this.request(`/api/tasks/${taskId}${query}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async getTaskExceptions(taskId: string) {
+    return this.request(`/api/tasks/${taskId}/exceptions`);
+  }
+
+  async deleteTaskException(taskId: string, exceptionDate: string) {
+    return this.request(`/api/tasks/${taskId}/exceptions/${exceptionDate}`, {
       method: 'DELETE',
     });
   }
@@ -225,7 +238,7 @@ class ApiClient {
   }
 
   async createCategory(name: string) {
-    return this.request(`/api/categories?name=${name}`, {
+    return this.request(`/api/categories?name=${encodeURIComponent(name)}`, {
       method: 'POST',
     });
   }
@@ -242,7 +255,7 @@ class ApiClient {
   }
 
   async createClassification(name: string) {
-    return this.request(`/api/classifications?name=${name}`, {
+    return this.request(`/api/classifications?name=${encodeURIComponent(name)}`, {
       method: 'POST',
     });
   }

@@ -26,9 +26,10 @@ interface Task {
   date: string;
   reminder_time?: string;
   repeat_pattern?: string;
-  repeat_day?: number;
   is_habit?: boolean;
   habit_id?: string;
+  is_recurring_instance?: boolean;
+  original_date?: string;
 }
 
 interface MonthlyGoal {
@@ -80,6 +81,14 @@ export default function TasksScreen() {
 
   useEffect(() => {
     loadData();
+  }, [selectedDate, viewMode]);
+
+  // Real-time cross-device sync via polling every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadData();
+    }, 5000);
+    return () => clearInterval(interval);
   }, [selectedDate, viewMode]);
 
   const loadData = async () => {
@@ -164,8 +173,10 @@ export default function TasksScreen() {
   const handleToggleTask = async (task: Task) => {
     try {
       if (task.is_habit && task.habit_id) {
-        // Toggle habit log instead of task
         await api.logHabit(task.habit_id, task.date, !task.completed);
+      } else if (task.is_recurring_instance || task.repeat_pattern) {
+        // Per-occurrence toggle — backend writes a completion override for this date
+        await api.updateTask(task.task_id, { completed: !task.completed, date: task.date });
       } else {
         await api.updateTask(task.task_id, { completed: !task.completed });
       }
@@ -175,12 +186,54 @@ export default function TasksScreen() {
     }
   };
 
-  const handleDeleteTask = async (taskId: string) => {
-    try {
-      await api.deleteTask(taskId);
-      loadData();
-    } catch (error) {
-      console.error('Error deleting task:', error);
+  const handleDeleteTask = (task: Task) => {
+    if (task.repeat_pattern || task.is_recurring_instance) {
+      Alert.alert(
+        'Delete Recurring Task',
+        'Do you want to skip just this day or delete the entire series?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Skip this day',
+            onPress: async () => {
+              try {
+                await api.deleteTask(task.task_id, 'single', task.date);
+                loadData();
+              } catch (error) {
+                console.error('Error skipping task:', error);
+              }
+            },
+          },
+          {
+            text: 'Delete entire series',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await api.deleteTask(task.task_id, 'series');
+                loadData();
+              } catch (error) {
+                console.error('Error deleting task:', error);
+              }
+            },
+          },
+        ]
+      );
+    } else {
+      Alert.alert('Delete Task', 'Are you sure?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await api.deleteTask(task.task_id);
+              loadData();
+            } catch (error) {
+              console.error('Error deleting task:', error);
+            }
+          },
+        },
+      ]);
     }
   };
 
@@ -259,7 +312,7 @@ export default function TasksScreen() {
   };
 
   const renderTaskItem = (task: Task) => (
-    <View key={task.task_id} style={styles.taskItem}>
+    <View key={task.task_id + (task.is_recurring_instance ? '_' + task.date : '')} style={styles.taskItem}>
       <TouchableOpacity
         style={styles.taskCheckbox}
         onPress={() => handleToggleTask(task)}
@@ -284,6 +337,11 @@ export default function TasksScreen() {
             <Ionicons name="repeat" size={12} /> {task.repeat_pattern}
           </Text>
         )}
+        {task.is_recurring_instance && !task.repeat_pattern && (
+          <Text style={styles.taskMeta}>
+            <Ionicons name="repeat" size={12} /> recurring
+          </Text>
+        )}
         {task.reminder_time && (
           <Text style={styles.taskMeta}>
             <Ionicons name="alarm" size={12} /> {task.reminder_time}
@@ -291,7 +349,7 @@ export default function TasksScreen() {
         )}
       </View>
       {!task.is_habit && (
-        <TouchableOpacity onPress={() => handleDeleteTask(task.task_id)}>
+        <TouchableOpacity onPress={() => handleDeleteTask(task)}>
           <Ionicons name="trash-outline" size={22} color="#FF6B6B" />
         </TouchableOpacity>
       )}
