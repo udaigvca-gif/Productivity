@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone, timedelta
+from dateutil import rrule as _rrule
 import httpx
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
@@ -57,10 +58,26 @@ class Task(BaseModel):
     user_id: str
     title: str
     completed: bool = False
-    date: str  # YYYY-MM-DD format
+    date: str  # YYYY-MM-DD format — the anchor/start date
     reminder_time: Optional[str] = None  # HH:MM format
-    repeat_pattern: Optional[str] = None  # "daily", "weekly", "monthly", "custom_day"
-    repeat_day: Optional[int] = None  # Day of week (0-6) for custom_day pattern
+    repeat_pattern: Optional[str] = None  # "daily", "weekly", "monthly"
+    repeat_end_date: Optional[str] = None  # YYYY-MM-DD, optional end for recurring series
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class TaskException(BaseModel):
+    exception_id: str = Field(default_factory=lambda: f"exc_{uuid.uuid4().hex[:12]}")
+    user_id: str
+    task_id: str  # the recurring parent task
+    exception_date: str  # YYYY-MM-DD — the occurrence being skipped
+    exception_type: str = "skip"  # "skip" (delete one day) only for now
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+class TaskCompletionOverride(BaseModel):
+    override_id: str = Field(default_factory=lambda: f"ovr_{uuid.uuid4().hex[:12]}")
+    user_id: str
+    task_id: str  # the recurring parent task
+    date: str  # YYYY-MM-DD — which occurrence was toggled
+    completed: bool
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class MonthlyGoal(BaseModel):
@@ -254,6 +271,77 @@ async def logout(authorization: Optional[str] = Header(None)):
     return {"message": "Logged out successfully"}
 
 
+# ============= RECURRING TASK EXPANSION =============
+
+def _parse_date(s: str) -> datetime:
+    return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+
+def _occurs_on(task_date_str: str, pattern: Optional[str], target: str) -> bool:
+    """Check whether a recurring task (anchored at task_date_str) occurs on target date."""
+    if not pattern:
+        return task_date_str == target
+    try:
+        anchor = _parse_date(task_date_str)
+        tgt = _parse_date(target)
+    except (ValueError, TypeError):
+        return task_date_str == target
+    if tgt < anchor:
+        return False
+    if pattern == "daily":
+        return True
+    if pattern == "weekly":
+        return tgt.weekday() == anchor.weekday()
+    if pattern == "monthly":
+        return tgt.day == anchor.day
+    return task_date_str == target
+
+
+async def _expand_recurring_for_date(user_id: str, target_date: str) -> List[Dict[str, Any]]:
+    """Return virtual task instances for all recurring tasks that fall on target_date,
+    respecting skip-exceptions and per-occurrence completion overrides."""
+    all_recurring = await db.tasks.find(
+        {"user_id": user_id, "repeat_pattern": {"$in": ["daily", "weekly", "monthly"]}},
+        {"_id": 0},
+    ).to_list(500)
+
+    if not all_recurring:
+        return []
+
+    # Batch-load exceptions and overrides for these tasks on this date
+    task_ids = [t["task_id"] for t in all_recurring]
+    exceptions = await db.task_exceptions.find(
+        {"task_id": {"$in": task_ids}, "exception_date": target_date},
+        {"_id": 0},
+    ).to_list(100)
+    skipped_task_ids = {e["task_id"] for e in exceptions}
+
+    overrides = await db.task_completion_overrides.find(
+        {"task_id": {"$in": task_ids}, "date": target_date},
+        {"_id": 0},
+    ).to_list(100)
+    override_map = {o["task_id"]: o["completed"] for o in overrides}
+
+    result: List[Dict[str, Any]] = []
+    for task in all_recurring:
+        if task["task_id"] in skipped_task_ids:
+            continue
+        if not _occurs_on(task["date"], task["repeat_pattern"], target_date):
+            continue
+        completed = override_map.get(task["task_id"], task.get("completed", False))
+        result.append({
+            "task_id": task["task_id"],
+            "user_id": user_id,
+            "title": task["title"],
+            "completed": completed,
+            "date": target_date,
+            "reminder_time": task.get("reminder_time"),
+            "repeat_pattern": task["repeat_pattern"],
+            "is_recurring_instance": True,
+            "original_date": task["date"],
+        })
+    return result
+
+
 # ============= TASK ROUTES =============
 
 @api_router.post("/tasks")
@@ -266,25 +354,35 @@ async def create_task(task: Task, authorization: Optional[str] = Header(None)):
 
 @api_router.get("/tasks")
 async def get_tasks(date: Optional[str] = None, authorization: Optional[str] = Header(None)):
-    """Get tasks for a specific date or all tasks. Auto-includes daily-linked habits as virtual tasks."""
+    """Get tasks for a specific date or all tasks.
+    When a date is given, expands recurring tasks as virtual instances and
+    auto-includes daily-linked habits as virtual tasks."""
     user_id = await get_current_user(authorization)
-    query = {"user_id": user_id}
+    query: Dict[str, Any] = {"user_id": user_id}
     if date:
         query["date"] = date
     tasks = await db.tasks.find(query, {"_id": 0}).to_list(1000)
 
-    # If a specific date is requested, also include linked habits as virtual tasks
     if date:
+        # Expand recurring tasks for this date as virtual instances
+        recurring_instances = await _expand_recurring_for_date(user_id, date)
+        # Only include recurring instances whose anchor date != target
+        # (anchor-date tasks are already in `tasks` from the DB query)
+        anchor_ids = {t["task_id"] for t in tasks}
+        for inst in recurring_instances:
+            if inst["task_id"] not in anchor_ids:
+                tasks.append(inst)
+
+        # Include linked habits as virtual tasks
         habits_linked = await db.habits.find(
             {"user_id": user_id, "add_to_daily": True}, {"_id": 0}
         ).to_list(100)
-        # For each linked habit, check if it's been logged as completed on this date
         for habit in habits_linked:
             log = await db.habit_logs.find_one(
                 {"habit_id": habit["habit_id"], "date": date}, {"_id": 0}
             )
             tasks.append({
-                "task_id": f"habit_{habit['habit_id']}",  # Virtual ID for habit-based tasks
+                "task_id": f"habit_{habit['habit_id']}",
                 "user_id": user_id,
                 "title": f"🔥 {habit['title']}",
                 "completed": (log["completed"] if log else False),
@@ -296,24 +394,92 @@ async def get_tasks(date: Optional[str] = None, authorization: Optional[str] = H
 
 @api_router.put("/tasks/{task_id}")
 async def update_task(task_id: str, updates: Dict[str, Any], authorization: Optional[str] = Header(None)):
-    """Update a task"""
+    """Update a task. If `date` is provided in updates, treats it as a per-occurrence
+    completion toggle for a recurring instance (writes a TaskCompletionOverride)."""
     user_id = await get_current_user(authorization)
+
+    # Per-occurrence completion toggle for recurring instance
+    if "date" in updates and "completed" in updates:
+        occ_date = updates["date"]
+        parent = await db.tasks.find_one({"task_id": task_id, "user_id": user_id}, {"_id": 0})
+        if parent and parent.get("repeat_pattern") in ("daily", "weekly", "monthly"):
+            existing = await db.task_completion_overrides.find_one(
+                {"task_id": task_id, "date": occ_date}, {"_id": 0}
+            )
+            if existing:
+                await db.task_completion_overrides.update_one(
+                    {"task_id": task_id, "date": occ_date},
+                    {"$set": {"completed": updates["completed"]}},
+                )
+            else:
+                override = TaskCompletionOverride(
+                    user_id=user_id, task_id=task_id,
+                    date=occ_date, completed=updates["completed"],
+                )
+                await db.task_completion_overrides.insert_one(override.dict())
+            return {"message": "Task occurrence updated successfully"}
+
     result = await db.tasks.update_one(
         {"task_id": task_id, "user_id": user_id},
-        {"$set": updates}
+        {"$set": {k: v for k, v in updates.items() if k != "date"}},
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     return {"message": "Task updated successfully"}
 
 @api_router.delete("/tasks/{task_id}")
-async def delete_task(task_id: str, authorization: Optional[str] = Header(None)):
-    """Delete a task"""
+async def delete_task(task_id: str, mode: str = "single", date: Optional[str] = None,
+                      authorization: Optional[str] = Header(None)):
+    """Delete a task. For recurring tasks:
+    - mode=series: deletes the entire recurring series (default)
+    - mode=single&date=YYYY-MM-DD: skips just that one occurrence (creates a TaskException)"""
     user_id = await get_current_user(authorization)
-    result = await db.tasks.delete_one({"task_id": task_id, "user_id": user_id})
-    if result.deleted_count == 0:
+    parent = await db.tasks.find_one({"task_id": task_id, "user_id": user_id}, {"_id": 0})
+    if not parent:
         raise HTTPException(status_code=404, detail="Task not found")
+
+    if mode == "single" and date and parent.get("repeat_pattern") in ("daily", "weekly", "monthly"):
+        # Skip this one occurrence
+        existing = await db.task_exceptions.find_one(
+            {"task_id": task_id, "exception_date": date}, {"_id": 0}
+        )
+        if not existing:
+            exc = TaskException(
+                user_id=user_id, task_id=task_id,
+                exception_date=date, exception_type="skip",
+            )
+            await db.task_exceptions.insert_one(exc.dict())
+        return {"message": "Task occurrence skipped"}
+
+    # Full series deletion — also clean up exceptions and overrides
+    await db.tasks.delete_one({"task_id": task_id, "user_id": user_id})
+    await db.task_exceptions.delete_many({"task_id": task_id, "user_id": user_id})
+    await db.task_completion_overrides.delete_many({"task_id": task_id, "user_id": user_id})
     return {"message": "Task deleted successfully"}
+
+
+# ============= TASK EXCEPTIONS =============
+
+@api_router.get("/tasks/{task_id}/exceptions")
+async def get_task_exceptions(task_id: str, authorization: Optional[str] = Header(None)):
+    """Get all skip-exceptions for a recurring task"""
+    user_id = await get_current_user(authorization)
+    excs = await db.task_exceptions.find(
+        {"task_id": task_id, "user_id": user_id}, {"_id": 0}
+    ).to_list(100)
+    return excs
+
+@api_router.delete("/tasks/{task_id}/exceptions/{exception_date}")
+async def delete_task_exception(task_id: str, exception_date: str,
+                                authorization: Optional[str] = Header(None)):
+    """Remove a skip-exception (restore a previously skipped occurrence)"""
+    user_id = await get_current_user(authorization)
+    result = await db.task_exceptions.delete_one(
+        {"task_id": task_id, "user_id": user_id, "exception_date": exception_date}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Exception not found")
+    return {"message": "Exception removed successfully"}
 
 
 # ============= GOALS ROUTES =============
