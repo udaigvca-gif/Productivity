@@ -428,7 +428,7 @@ async def update_task(task_id: str, updates: Dict[str, Any], authorization: Opti
     return {"message": "Task updated successfully"}
 
 @api_router.delete("/tasks/{task_id}")
-async def delete_task(task_id: str, mode: str = "single", date: Optional[str] = None,
+async def delete_task(task_id: str, mode: str = "series", date: Optional[str] = None,
                       authorization: Optional[str] = Header(None)):
     """Delete a task. For recurring tasks:
     - mode=series: deletes the entire recurring series (default)
@@ -980,7 +980,8 @@ async def search(q: str, authorization: Optional[str] = Header(None)):
 
 @api_router.get("/tasks/week")
 async def get_tasks_week(start_date: str, authorization: Optional[str] = Header(None)):
-    """Get tasks for a full week starting from start_date (YYYY-MM-DD)"""
+    """Get tasks for a full week starting from start_date (YYYY-MM-DD).
+    Also expands recurring tasks across all 7 days."""
     user_id = await get_current_user(authorization)
     start = datetime.strptime(start_date, "%Y-%m-%d")
     end = start + timedelta(days=6)
@@ -989,6 +990,16 @@ async def get_tasks_week(start_date: str, authorization: Optional[str] = Header(
         {"user_id": user_id, "date": {"$gte": start_date, "$lte": end_str}},
         {"_id": 0},
     ).to_list(1000)
+
+    # Expand recurring tasks for each day in the week
+    anchor_ids = {t["task_id"] for t in tasks}
+    for i in range(7):
+        day_str = (start + timedelta(days=i)).strftime("%Y-%m-%d")
+        recurring = await _expand_recurring_for_date(user_id, day_str)
+        for inst in recurring:
+            if inst["task_id"] not in anchor_ids:
+                tasks.append(inst)
+                anchor_ids.add(inst["task_id"])
     return tasks
 
 
@@ -1161,6 +1172,10 @@ async def startup_db_indexes():
     # Time Entries
     await db.time_entries.create_index("user_id")
     await db.time_entries.create_index("date")
+    
+    # Task exceptions & completion overrides
+    await db.task_exceptions.create_index([("task_id", 1), ("exception_date", 1)], unique=True)
+    await db.task_completion_overrides.create_index([("task_id", 1), ("date", 1)], unique=True)
     
     logger.info("MongoDB indexes created successfully")
 
