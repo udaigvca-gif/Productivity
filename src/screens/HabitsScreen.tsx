@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { format, parseISO, differenceInCalendarDays, eachDayOfInterval, subDays } from 'date-fns';
 import {
   Plus, Trash2, Flame, Book, BookOpen, Check, X,
-  TrendingUp, Calendar as CalIcon
+  BookPlus
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
@@ -13,7 +13,6 @@ export default function HabitsScreen() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [logs, setLogs] = useState<HabitLog[]>([]);
   const [books, setBooks] = useState<BookType[]>([]);
-  const [selectedHabit, setSelectedHabit] = useState<Habit | null>(null);
   const [showAddHabit, setShowAddHabit] = useState(false);
   const [showAddBook, setShowAddBook] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
@@ -38,35 +37,48 @@ export default function HabitsScreen() {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
-  }, [loadData]);
-
   const handleAddHabit = async () => {
     if (!newHabitName.trim()) return;
-    await supabase.from('habits').insert({
+    const tempId = crypto.randomUUID();
+    const newHabit: Habit = {
+      id: tempId,
+      user_id: '',
       name: newHabitName.trim(),
       type: newHabitType,
-    });
+      target_hours: 0,
+      target_minutes: 0,
+      add_to_daily: false,
+    };
+    setHabits((prev) => [...prev, newHabit]);
     setNewHabitName('');
     setNewHabitType('general');
     setShowAddHabit(false);
+    await supabase.from('habits').insert({
+      name: newHabit.name,
+      type: newHabit.type,
+    });
     loadData();
   };
 
   const handleDeleteHabit = async (id: string) => {
     if (!confirm('Delete this habit and all its logs?')) return;
+    setHabits((prev) => prev.filter((h) => h.id !== id));
+    setLogs((prev) => prev.filter((l) => l.habit_id !== id));
     await supabase.from('habits').delete().eq('id', id);
-    if (selectedHabit?.id === id) setSelectedHabit(null);
     loadData();
   };
 
   const handleToggleLog = async (habitId: string, date: string) => {
     const existing = logs.find((l) => l.habit_id === habitId && l.date === date);
+    // Optimistic
     if (existing) {
+      setLogs((prev) => prev.filter((l) => l.id !== existing.id));
       await supabase.from('habit_logs').delete().eq('id', existing.id);
     } else {
+      const tempId = crypto.randomUUID();
+      setLogs((prev) => [...prev, {
+        id: tempId, habit_id: habitId, user_id: '', date, completed: true,
+      }]);
       await supabase.from('habit_logs').insert({
         habit_id: habitId,
         date,
@@ -78,17 +90,33 @@ export default function HabitsScreen() {
 
   const handleAddBook = async () => {
     if (!newBookTitle.trim()) return;
-    await supabase.from('books').insert({
+    const tempId = crypto.randomUUID();
+    const newBook: BookType = {
+      id: tempId,
+      user_id: '',
       title: newBookTitle.trim(),
       author: newBookAuthor.trim() || null,
-    });
+      completed: false,
+      completed_date: null,
+    };
+    setBooks((prev) => [...prev, newBook]);
     setNewBookTitle('');
     setNewBookAuthor('');
     setShowAddBook(false);
+    await supabase.from('books').insert({
+      title: newBook.title,
+      author: newBook.author,
+    });
     loadData();
   };
 
   const handleToggleBook = async (book: BookType) => {
+    // Optimistic
+    setBooks((prev) => prev.map((b) =>
+      b.id === book.id
+        ? { ...b, completed: !b.completed, completed_date: !b.completed ? format(new Date(), 'yyyy-MM-dd') : null }
+        : b
+    ));
     if (book.completed) {
       await supabase.from('books').update({ completed: false, completed_date: null }).eq('id', book.id);
     } else {
@@ -98,6 +126,7 @@ export default function HabitsScreen() {
   };
 
   const handleDeleteBook = async (id: string) => {
+    setBooks((prev) => prev.filter((b) => b.id !== id));
     await supabase.from('books').delete().eq('id', id);
     loadData();
   };
@@ -108,9 +137,8 @@ export default function HabitsScreen() {
     const sortedDates = habitLogs.map((l) => l.date).sort();
 
     let currentStreak = 0;
-    let today = format(new Date(), 'yyyy-MM-dd');
-    let yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
-
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
     const checkDate = (date: string) => habitLogs.some((l) => l.date === date);
 
     if (checkDate(today)) {
@@ -151,7 +179,7 @@ export default function HabitsScreen() {
             <button
               key={dateStr}
               onClick={() => handleToggleLog(habitId, dateStr)}
-              className={`h-7 w-7 rounded-md transition ${
+              className={`h-7 w-7 rounded-md transition-all duration-150 active:scale-90 ${
                 isDone ? 'text-white' : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
               }`}
               style={isDone ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
@@ -191,12 +219,12 @@ export default function HabitsScreen() {
             const doneToday = logs.some((l) => l.habit_id === habit.id && l.date === todayStr && l.completed);
 
             return (
-              <div key={habit.id} className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:shadow-md animate-fade-in">
+              <div key={habit.id} className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => handleToggleLog(habit.id, todayStr)}
-                      className="flex h-10 w-10 items-center justify-center rounded-xl transition"
+                      className="flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 active:scale-90"
                       style={doneToday
                         ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }
                         : { background: '#f1f5f9' }
@@ -211,7 +239,7 @@ export default function HabitsScreen() {
                   </div>
                   <button
                     onClick={() => handleDeleteHabit(habit.id)}
-                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -246,6 +274,13 @@ export default function HabitsScreen() {
             <BookOpen className="h-5 w-5" style={{ color: theme.primary }} />
             Books
           </h2>
+          <button
+            onClick={() => setShowAddBook(true)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:opacity-90 active:scale-95"
+            style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
+          >
+            <BookPlus className="h-4 w-4" /> Add Book
+          </button>
         </div>
 
         {readingBooks.length > 0 && (
@@ -261,14 +296,14 @@ export default function HabitsScreen() {
                   </div>
                   <button
                     onClick={() => handleToggleBook(book)}
-                    className="rounded-lg px-3 py-1.5 text-xs font-medium text-white transition"
+                    className="rounded-lg px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:opacity-90 active:scale-95"
                     style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
                   >
                     Mark Done
                   </button>
                   <button
                     onClick={() => handleDeleteBook(book.id)}
-                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -291,7 +326,7 @@ export default function HabitsScreen() {
                   </div>
                   <button
                     onClick={() => handleDeleteBook(book.id)}
-                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -304,7 +339,7 @@ export default function HabitsScreen() {
         {books.length === 0 && (
           <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
             <BookOpen className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-            <p className="text-slate-400">No books yet. Tap + to add one!</p>
+            <p className="text-slate-400">No books yet. Tap "Add Book" to start your reading list!</p>
           </div>
         )}
       </div>
@@ -312,7 +347,7 @@ export default function HabitsScreen() {
       {/* FAB */}
       <button
         onClick={() => setShowAddHabit(true)}
-        className="fixed bottom-20 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition hover:scale-105"
+        className="fixed bottom-20 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-all duration-200 hover:scale-110 active:scale-95"
         style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
       >
         <Plus className="h-7 w-7" />
@@ -320,18 +355,18 @@ export default function HabitsScreen() {
 
       {/* Add Habit Modal */}
       {showAddHabit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowAddHabit(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowAddHabit(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">New Habit</h3>
-              <button onClick={() => setShowAddHabit(false)} className="text-slate-400"><X className="h-5 w-5" /></button>
+              <button onClick={() => setShowAddHabit(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Habit name" value={newHabitName}
               onChange={(e) => setNewHabitName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()}
               autoFocus
-              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
             />
             <div className="mb-4">
               <label className="mb-1 block text-xs font-semibold text-slate-500">Type</label>
@@ -340,8 +375,8 @@ export default function HabitsScreen() {
                   <button
                     key={t}
                     onClick={() => setNewHabitType(t)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition ${
-                      newHabitType === t ? 'text-white' : 'bg-slate-100 text-slate-500'
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-all duration-200 ${
+                      newHabitType === t ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
                     style={newHabitType === t ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
                   >
@@ -352,10 +387,42 @@ export default function HabitsScreen() {
             </div>
             <button
               onClick={handleAddHabit}
-              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
             >
               Add Habit
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Book Modal */}
+      {showAddBook && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowAddBook(false)}>
+          <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800">Add Book</h3>
+              <button onClick={() => setShowAddBook(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
+            </div>
+            <input
+              type="text" placeholder="Book title" value={newBookTitle}
+              onChange={(e) => setNewBookTitle(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddBook()}
+              autoFocus
+              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+            />
+            <input
+              type="text" placeholder="Author (optional)" value={newBookAuthor}
+              onChange={(e) => setNewBookAuthor(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddBook()}
+              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+            />
+            <button
+              onClick={handleAddBook}
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+              style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
+            >
+              Add Book
             </button>
           </div>
         </div>

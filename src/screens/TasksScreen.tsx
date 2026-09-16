@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { format, startOfWeek, addDays, parseISO, isSameDay, isToday } from 'date-fns';
 import {
   Plus, Trash2, Repeat, Bell, ChevronLeft, ChevronRight,
-  CheckCircle2, Circle, Trophy, Target, X, Calendar
+  CheckCircle2, Circle, Trophy, Target, X, Calendar, CalendarDays
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
@@ -29,6 +29,7 @@ export default function TasksScreen() {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [repeatPattern, setRepeatPattern] = useState('');
+  const [repeatEndDate, setRepeatEndDate] = useState('');
   const [reminderTime, setReminderTime] = useState('');
   const [newGoalTitle, setNewGoalTitle] = useState('');
 
@@ -36,7 +37,7 @@ export default function TasksScreen() {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) return;
 
-    if (viewMode === 'calendar') {
+    if (viewMode === 'calendar' || viewMode === 'week') {
       const { data: rawTasks } = await supabase
         .from('tasks').select('*').eq('user_id', userData.user.id);
       const { data: excs } = await supabase
@@ -50,25 +51,18 @@ export default function TasksScreen() {
       setTasks(t);
       setExceptions(e);
       setOverrides(o);
-      setExpanded(expandRecurringTasks(t, e, o, selectedDate));
-    } else if (viewMode === 'week') {
-      const weekStart = format(startOfWeek(parseISO(selectedDate), { weekStartsOn: 1 }), 'yyyy-MM-dd');
-      const { data: rawTasks } = await supabase
-        .from('tasks').select('*').eq('user_id', userData.user.id);
-      const { data: excs } = await supabase
-        .from('task_exceptions').select('*').eq('user_id', userData.user.id);
-      const { data: ovs } = await supabase
-        .from('task_completion_overrides').select('*').eq('user_id', userData.user.id);
 
-      const t = (rawTasks ?? []) as Task[];
-      const e = (excs ?? []) as TaskException[];
-      const o = (ovs ?? []) as TaskCompletionOverride[];
-      const weekDates = getWeekDates(weekStart);
-      const byDate: Record<string, ExpandedTask[]> = {};
-      for (const d of weekDates) {
-        byDate[d] = expandRecurringTasks(t, e, o, d);
+      if (viewMode === 'calendar') {
+        setExpanded(expandRecurringTasks(t, e, o, selectedDate));
+      } else {
+        const weekStart = format(startOfWeek(parseISO(selectedDate), { weekStartsOn: 1 }), 'yyyy-MM-dd');
+        const weekDates = getWeekDates(weekStart);
+        const byDate: Record<string, ExpandedTask[]> = {};
+        for (const d of weekDates) {
+          byDate[d] = expandRecurringTasks(t, e, o, d);
+        }
+        setWeekTasks(byDate);
       }
-      setWeekTasks(byDate);
     } else if (viewMode === 'monthly') {
       const month = format(parseISO(selectedDate), 'yyyy-MM');
       const { data } = await supabase
@@ -86,32 +80,59 @@ export default function TasksScreen() {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
-  }, [loadData]);
-
   const handleAddTask = async () => {
     if (!newTitle.trim()) return;
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) return;
+
+    const newTask: Task = {
+      id: crypto.randomUUID(),
+      user_id: '',
+      title: newTitle.trim(),
+      completed: false,
+      date: selectedDate,
+      reminder_time: reminderTime || null,
+      repeat_pattern: (repeatPattern || null) as Task['repeat_pattern'],
+      repeat_end_date: repeatEndDate || null,
+      created_at: new Date().toISOString(),
+    };
+
+    // Optimistic: add to local state immediately
+    if (viewMode === 'calendar') {
+      setExpanded((prev) => [...prev, { ...newTask, is_recurring_instance: false, exception_dates: [] }]);
+    }
+    setTasks((prev) => [...prev, newTask]);
 
     const { error } = await supabase.from('tasks').insert({
       title: newTitle.trim(),
       date: selectedDate,
       reminder_time: reminderTime || null,
       repeat_pattern: repeatPattern || null,
+      repeat_end_date: repeatEndDate || null,
     });
     if (!error) {
       setNewTitle('');
       setRepeatPattern('');
+      setRepeatEndDate('');
       setReminderTime('');
       setShowAddModal(false);
-      loadData();
+      loadData(); // refresh to get the real DB id
     }
   };
 
   const handleToggle = async (task: ExpandedTask) => {
+    // Optimistic toggle
+    const toggleIn = (arr: ExpandedTask[]) =>
+      arr.map((t) =>
+        t.id === task.id && t.date === task.date
+          ? { ...t, completed: !t.completed }
+          : t
+      );
+    setExpanded(toggleIn);
+    setWeekTasks((prev) => {
+      const next = { ...prev };
+      for (const k of Object.keys(next)) next[k] = toggleIn(next[k]);
+      return next;
+    });
+
     if (task.is_recurring_instance) {
       const existing = overrides.find((o) => o.task_id === task.id && o.date === task.date);
       if (existing) {
@@ -135,6 +156,7 @@ export default function TasksScreen() {
   const handleDelete = (task: ExpandedTask) => {
     if (task.is_recurring_instance) {
       const doSkip = async () => {
+        setExpanded((prev) => prev.filter((t) => !(t.id === task.id && t.date === task.date)));
         await supabase.from('task_exceptions').insert({
           task_id: task.id,
           exception_date: task.date,
@@ -142,6 +164,8 @@ export default function TasksScreen() {
         loadData();
       };
       const doDeleteSeries = async () => {
+        setExpanded((prev) => prev.filter((t) => t.id !== task.id));
+        setTasks((prev) => prev.filter((t) => t.id !== task.id));
         await supabase.from('tasks').delete().eq('id', task.id);
         loadData();
       };
@@ -154,6 +178,8 @@ export default function TasksScreen() {
       }
     } else {
       if (confirm('Delete this task?')) {
+        setExpanded((prev) => prev.filter((t) => t.id !== task.id));
+        setTasks((prev) => prev.filter((t) => t.id !== task.id));
         supabase.from('tasks').delete().eq('id', task.id).then(() => loadData());
       }
     }
@@ -178,11 +204,22 @@ export default function TasksScreen() {
   };
 
   const handleToggleGoal = async (goal: MonthlyGoal | YearlyGoal, table: 'monthly_goals' | 'yearly_goals') => {
+    // Optimistic
+    if (table === 'monthly_goals') {
+      setMonthlyGoals((prev) => prev.map((g) => g.id === goal.id ? { ...g, completed: !g.completed } : g));
+    } else {
+      setYearlyGoals((prev) => prev.map((g) => g.id === goal.id ? { ...g, completed: !g.completed } : g));
+    }
     await supabase.from(table).update({ completed: !goal.completed }).eq('id', goal.id);
     loadData();
   };
 
   const handleDeleteGoal = async (id: string, table: 'monthly_goals' | 'yearly_goals') => {
+    if (table === 'monthly_goals') {
+      setMonthlyGoals((prev) => prev.filter((g) => g.id !== id));
+    } else {
+      setYearlyGoals((prev) => prev.filter((g) => g.id !== id));
+    }
     await supabase.from(table).delete().eq('id', id);
     loadData();
   };
@@ -215,18 +252,18 @@ export default function TasksScreen() {
   const renderTaskItem = (task: ExpandedTask) => (
     <div
       key={task.id + (task.is_recurring_instance ? '_' + task.date : '')}
-      className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:shadow-md animate-fade-in"
+      className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
     >
-      <button onClick={() => handleToggle(task)} className="flex-shrink-0">
+      <button onClick={() => handleToggle(task)} className="flex-shrink-0 transition-transform active:scale-90">
         {task.completed ? (
-          <CheckCircle2 className="h-7 w-7" style={{ color: '#22c55e' }} />
+          <CheckCircle2 className="h-7 w-7 transition-colors" style={{ color: '#22c55e' }} />
         ) : (
-          <Circle className="h-7 w-7 text-slate-300 group-hover:text-slate-400" />
+          <Circle className="h-7 w-7 text-slate-300 transition-colors group-hover:text-slate-400" />
         )}
       </button>
       <div className="flex-1 min-w-0">
         <span
-          className={`text-sm font-medium ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}
+          className={`text-sm font-medium transition-all ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}
         >
           {task.title}
         </span>
@@ -234,6 +271,7 @@ export default function TasksScreen() {
           {task.repeat_pattern && (
             <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
               <Repeat className="h-3 w-3" /> {task.repeat_pattern}
+              {task.repeat_end_date && <span className="text-slate-400">until {format(parseISO(task.repeat_end_date), 'MMM d')}</span>}
             </span>
           )}
           {task.reminder_time && (
@@ -245,7 +283,7 @@ export default function TasksScreen() {
       </div>
       <button
         onClick={() => handleDelete(task)}
-        className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+        className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
       >
         <Trash2 className="h-5 w-5" />
       </button>
@@ -286,9 +324,8 @@ export default function TasksScreen() {
               <button
                 key={i}
                 onClick={() => setSelectedDate(dateStr)}
-                className={`
-                  relative flex flex-col items-center justify-center rounded-lg py-2 text-sm transition
-                  ${isSelected ? 'text-white font-bold' : isCurrentMonth ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-300'}
+                className={`relative flex flex-col items-center justify-center rounded-lg py-2 text-sm transition-all duration-150
+                  ${isSelected ? 'text-white font-bold scale-[1.02]' : isCurrentMonth ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-300'}
                 `}
                 style={isSelected ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
               >
@@ -299,7 +336,7 @@ export default function TasksScreen() {
                 </span>
                 {hasTasks && (
                   <span
-                    className="mt-0.5 h-1.5 w-1.5 rounded-full"
+                    className="mt-0.5 h-1.5 w-1.5 rounded-full transition-colors"
                     style={{ background: isSelected ? 'white' : allDone ? '#22c55e' : theme.primary }}
                   />
                 )}
@@ -355,21 +392,21 @@ export default function TasksScreen() {
       {goals.map((goal) => (
         <div
           key={goal.id}
-          className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:shadow-md animate-fade-in"
+          className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
         >
-          <button onClick={() => handleToggleGoal(goal, table)} className="flex-shrink-0">
+          <button onClick={() => handleToggleGoal(goal, table)} className="flex-shrink-0 transition-transform active:scale-90">
             {goal.completed ? (
               <Trophy className="h-7 w-7" style={{ color: '#22c55e' }} />
             ) : (
-              <Circle className="h-7 w-7 text-slate-300 group-hover:text-slate-400" />
+              <Circle className="h-7 w-7 text-slate-300 transition-colors group-hover:text-slate-400" />
             )}
           </button>
-          <span className={`flex-1 text-sm font-medium ${goal.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+          <span className={`flex-1 text-sm font-medium transition-all ${goal.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
             {goal.title}
           </span>
           <button
             onClick={() => handleDeleteGoal(goal.id, table)}
-            className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+            className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
           >
             <Trash2 className="h-5 w-5" />
           </button>
@@ -386,7 +423,7 @@ export default function TasksScreen() {
           <button
             key={mode}
             onClick={() => setViewMode(mode)}
-            className={`flex-1 rounded-lg py-2 text-xs font-semibold capitalize transition ${
+            className={`flex-1 rounded-lg py-2 text-xs font-semibold capitalize transition-all duration-200 ${
               viewMode === mode ? 'bg-white shadow-sm' : 'text-slate-500'
             }`}
             style={viewMode === mode ? { color: theme.primary } : {}}
@@ -398,11 +435,11 @@ export default function TasksScreen() {
 
       {/* Date Navigation */}
       <div className="mb-4 flex items-center justify-between">
-        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
           <ChevronLeft className="h-5 w-5" />
         </button>
         <h2 className="text-lg font-semibold text-slate-700">{getDateLabel()}</h2>
-        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
@@ -437,7 +474,7 @@ export default function TasksScreen() {
             </p>
             <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className="h-full rounded-full transition-all"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${monthlyGoals.length > 0 ? (monthlyGoals.filter((g) => g.completed).length / monthlyGoals.length) * 100 : 0}%`,
                   background: `linear-gradient(90deg, ${theme.primary}, ${theme.secondary})`,
@@ -461,7 +498,7 @@ export default function TasksScreen() {
             </p>
             <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
               <div
-                className="h-full rounded-full transition-all"
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${yearlyGoals.length > 0 ? (yearlyGoals.filter((g) => g.completed).length / yearlyGoals.length) * 100 : 0}%`,
                   background: `linear-gradient(90deg, ${theme.primary}, ${theme.secondary})`,
@@ -476,7 +513,7 @@ export default function TasksScreen() {
       {/* FAB */}
       <button
         onClick={() => (viewMode === 'monthly' || viewMode === 'yearly') ? setShowGoalModal(true) : setShowAddModal(true)}
-        className="fixed bottom-20 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition hover:scale-105"
+        className="fixed bottom-20 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-all duration-200 hover:scale-110 active:scale-95"
         style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
       >
         <Plus className="h-7 w-7" />
@@ -484,14 +521,14 @@ export default function TasksScreen() {
 
       {/* Add Task Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4" onClick={() => setShowAddModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowAddModal(false)}>
           <div
             className="w-full max-w-md animate-slide-up rounded-2xl bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">New Task</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowAddModal(false)} className="text-slate-400 transition-colors hover:text-slate-600">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -502,17 +539,19 @@ export default function TasksScreen() {
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
               autoFocus
-              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
             />
             <div className="mb-3">
-              <label className="mb-1 block text-xs font-semibold text-slate-500">Repeat</label>
+              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                <Repeat className="h-3.5 w-3.5" /> Repeat
+              </label>
               <div className="flex gap-2">
                 {['', 'daily', 'weekly', 'monthly'].map((p) => (
                   <button
                     key={p}
                     onClick={() => setRepeatPattern(p)}
-                    className={`flex-1 rounded-lg py-2 text-xs font-medium capitalize transition ${
-                      repeatPattern === p ? 'text-white' : 'bg-slate-100 text-slate-500'
+                    className={`flex-1 rounded-lg py-2 text-xs font-medium capitalize transition-all duration-200 ${
+                      repeatPattern === p ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                     }`}
                     style={repeatPattern === p ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
                   >
@@ -521,18 +560,34 @@ export default function TasksScreen() {
                 ))}
               </div>
             </div>
+            {repeatPattern && (
+              <div className="mb-3 animate-fade-in">
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                  <CalendarDays className="h-3.5 w-3.5" /> Repeat Until (optional)
+                </label>
+                <input
+                  type="date"
+                  value={repeatEndDate}
+                  min={selectedDate}
+                  onChange={(e) => setRepeatEndDate(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+                />
+              </div>
+            )}
             <div className="mb-4">
-              <label className="mb-1 block text-xs font-semibold text-slate-500">Reminder Time (optional)</label>
+              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                <Bell className="h-3.5 w-3.5" /> Reminder Time (optional)
+              </label>
               <input
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
               />
             </div>
             <button
               onClick={handleAddTask}
-              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
             >
               Add Task
@@ -543,7 +598,7 @@ export default function TasksScreen() {
 
       {/* Add Goal Modal */}
       {showGoalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowGoalModal(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowGoalModal(false)}>
           <div
             className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
@@ -552,7 +607,7 @@ export default function TasksScreen() {
               <h3 className="text-lg font-bold text-slate-800">
                 New {viewMode === 'monthly' ? 'Monthly' : 'Yearly'} Goal
               </h3>
-              <button onClick={() => setShowGoalModal(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setShowGoalModal(false)} className="text-slate-400 transition-colors hover:text-slate-600">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -563,11 +618,11 @@ export default function TasksScreen() {
               onChange={(e) => setNewGoalTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
               autoFocus
-              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
             />
             <button
               onClick={handleAddGoal}
-              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
             >
               Add Goal

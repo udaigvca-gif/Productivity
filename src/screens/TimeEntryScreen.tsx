@@ -72,10 +72,7 @@ export default function TimeEntryScreen() {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
-  }, [loadData]);
+
 
   const seedDefaults = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -104,6 +101,19 @@ export default function TimeEntryScreen() {
 
   const handleAddEntry = async () => {
     if (!newActivity.trim() || !startTime || !endTime) return;
+    const tempId = crypto.randomUUID();
+    const newEntry: TimeEntry = {
+      id: tempId, user_id: '', date: selectedDate,
+      start_time: startTime, end_time: endTime,
+      activity: newActivity.trim(),
+      category: selectedCategory || 'General',
+      classification: selectedClassification || 'Neutral',
+    };
+    setEntries((prev) => [...prev, newEntry]);
+    setNewActivity('');
+    setStartTime('');
+    setEndTime('');
+    setShowAddEntry(false);
     await supabase.from('time_entries').insert({
       date: selectedDate,
       start_time: startTime,
@@ -112,20 +122,19 @@ export default function TimeEntryScreen() {
       category: selectedCategory || 'General',
       classification: selectedClassification || 'Neutral',
     });
-    setNewActivity('');
-    setStartTime('');
-    setEndTime('');
-    setShowAddEntry(false);
     loadData();
   };
 
   const handleDeleteEntry = async (id: string) => {
+    setEntries((prev) => prev.filter((e) => e.id !== id));
     await supabase.from('time_entries').delete().eq('id', id);
     loadData();
   };
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
+    const tempId = crypto.randomUUID();
+    setCategories((prev) => [...prev, { id: tempId, user_id: '', name: newCategoryName.trim() }]);
     await supabase.from('categories').insert({ name: newCategoryName.trim() });
     setNewCategoryName('');
     setShowCategory(false);
@@ -134,6 +143,8 @@ export default function TimeEntryScreen() {
 
   const handleAddClassification = async () => {
     if (!newClassificationName.trim()) return;
+    const tempId = crypto.randomUUID();
+    setClassifications((prev) => [...prev, { id: tempId, user_id: '', name: newClassificationName.trim() }]);
     await supabase.from('classifications').insert({ name: newClassificationName.trim() });
     setNewClassificationName('');
     setShowClassification(false);
@@ -141,11 +152,13 @@ export default function TimeEntryScreen() {
   };
 
   const handleDeleteCategory = async (id: string) => {
+    setCategories((prev) => prev.filter((c) => c.id !== id));
     await supabase.from('categories').delete().eq('id', id);
     loadData();
   };
 
   const handleDeleteClassification = async (id: string) => {
+    setClassifications((prev) => prev.filter((c) => c.id !== id));
     await supabase.from('classifications').delete().eq('id', id);
     loadData();
   };
@@ -186,11 +199,11 @@ export default function TimeEntryScreen() {
     <div className="mx-auto max-w-2xl px-4 py-6">
       {/* Date Navigation */}
       <div className="mb-4 flex items-center justify-between">
-        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
           <ChevronLeft className="h-5 w-5" />
         </button>
         <h2 className="text-lg font-semibold text-slate-700">{format(parseISO(selectedDate), 'EEEE, MMM d')}</h2>
-        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-100">
+        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
@@ -223,7 +236,7 @@ export default function TimeEntryScreen() {
           const dur = calcDuration(entry.start_time, entry.end_time);
           const color = getClassificationColor(entry.classification);
           return (
-            <div key={entry.id} className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition hover:shadow-md animate-fade-in"
+            <div key={entry.id} className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
               style={{ borderLeft: `4px solid ${color}` }}
             >
               <div className="flex-1 min-w-0">
@@ -239,7 +252,7 @@ export default function TimeEntryScreen() {
               </div>
               <button
                 onClick={() => handleDeleteEntry(entry.id)}
-                className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

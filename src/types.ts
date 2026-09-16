@@ -113,6 +113,7 @@ export interface ThemePalette {
   habitsGradient: [string, string];
   timeGradient: [string, string];
   profileGradient: [string, string];
+  loginGradient: [string, string, string];
 }
 
 export type TabKey = 'tasks' | 'habits' | 'time' | 'analytics' | 'profile';

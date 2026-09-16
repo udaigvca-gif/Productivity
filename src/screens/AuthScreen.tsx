@@ -31,7 +31,7 @@ export default function AuthScreen() {
   return (
     <div
       className="flex min-h-screen w-full items-center justify-center p-6"
-      style={{ background: `linear-gradient(135deg, ${theme.gradient[0]}, ${theme.gradient[1]})` }}
+      style={{ background: `linear-gradient(135deg, ${theme.loginGradient[0]}, ${theme.loginGradient[1]}, ${theme.loginGradient[2]})` }}
     >
       <div className="w-full max-w-md animate-scale-in rounded-3xl bg-white/95 p-8 shadow-2xl backdrop-blur-xl">
         <div className="mb-8 text-center">
