@@ -20,7 +20,7 @@ export default function MainApp() {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabKey>('tasks');
 
-  const gradientMap: Record<TabKey, [string, string]> = {
+  const accentMap: Record<TabKey, [string, string]> = {
     tasks: theme.tasksGradient,
     habits: theme.habitsGradient,
     time: theme.timeGradient,
@@ -28,18 +28,21 @@ export default function MainApp() {
     profile: theme.profileGradient,
   };
 
+  const [g0, g1] = accentMap[activeTab];
+
   return (
-    <div className="flex h-screen w-full flex-col bg-slate-100">
+    <div className="flex h-screen w-full flex-col" style={{ background: '#f5f7f3' }}>
       <header
-        className="relative flex items-center justify-between px-5 py-4 shadow-sm transition-all duration-500"
-        style={{ background: `linear-gradient(135deg, ${gradientMap[activeTab][0]}, ${gradientMap[activeTab][1]})` }}
+        className="relative flex items-center justify-between px-5 py-4 transition-all duration-500"
+        style={{
+          background: `linear-gradient(120deg, ${g0}, ${g1})`,
+          color: '#fff',
+        }}
       >
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-lg font-bold tracking-tight text-white">TaskFlow Life</h1>
-        </div>
-        <div className="text-xs font-medium text-white/70 uppercase tracking-wider">
+        <h1 className="font-display text-lg font-bold tracking-tight text-white">TaskFlow Life</h1>
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
           {tabs.find((t) => t.key === activeTab)?.label}
-        </div>
+        </span>
       </header>
 
       <main className="flex-1 overflow-y-auto">
@@ -52,7 +55,10 @@ export default function MainApp() {
         </div>
       </main>
 
-      <nav className="flex items-center justify-around border-t border-slate-200 bg-white px-2 py-1.5 shadow-sm">
+      <nav
+        className="flex items-center justify-around border-t px-2 py-1.5 shadow-sm"
+        style={{ borderColor: 'rgba(0,0,0,0.06)', background: '#fff' }}
+      >
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           const Icon = tab.icon;
@@ -60,21 +66,21 @@ export default function MainApp() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className="group flex flex-1 flex-col items-center gap-0.5 py-2 transition-all duration-200"
+              className="group flex flex-1 flex-col items-center gap-0.5 py-1.5 transition-all duration-200"
             >
               <div
                 className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200"
-                style={isActive ? { background: `${theme.primary}15` } : {}}
+                style={isActive ? { background: `${theme.primary}1a` } : {}}
               >
                 <Icon
-                  className="h-5 w-5 transition-all duration-200"
-                  style={{ color: isActive ? theme.primary : '#94a3b8' }}
-                  strokeWidth={isActive ? 2.5 : 2}
+                  className="h-[18px] w-[18px] transition-all duration-200"
+                  style={{ color: isActive ? theme.primary : '#94a08e' }}
+                  strokeWidth={isActive ? 2.4 : 2}
                 />
               </div>
               <span
-                className="text-[10px] font-semibold uppercase tracking-wide transition-all duration-200"
-                style={{ color: isActive ? theme.primary : '#94a3b8' }}
+                className="text-[10px] font-semibold uppercase tracking-[0.1em] transition-all duration-200"
+                style={{ color: isActive ? theme.primary : '#94a08e' }}
               >
                 {tab.label}
               </span>

@@ -28,55 +28,58 @@ export default function AuthScreen() {
     }
   };
 
+  const ink = '#263024';
+  const sub = '#5d6b56';
+
   return (
     <div
       className="relative flex min-h-screen w-full items-center justify-center overflow-hidden p-6"
-      style={{ background: `linear-gradient(135deg, ${theme.loginGradient[0]}, ${theme.loginGradient[1]}, ${theme.loginGradient[2]})` }}
+      style={{ background: `linear-gradient(150deg, ${theme.loginGradient[0]}, ${theme.loginGradient[1]}, ${theme.loginGradient[2]})` }}
     >
-      {/* Decorative orbs */}
-      <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full opacity-20 blur-3xl" style={{ background: theme.primary }} />
-      <div className="pointer-events-none absolute -bottom-40 -left-32 h-96 w-96 rounded-full opacity-15 blur-3xl" style={{ background: theme.secondary }} />
+      <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full opacity-25 blur-3xl" style={{ background: theme.secondary }} />
+      <div className="pointer-events-none absolute -bottom-40 -left-32 h-96 w-96 rounded-full opacity-20 blur-3xl" style={{ background: theme.primary }} />
 
-      <div className="relative w-full max-w-md animate-scale-in rounded-3xl bg-white/95 p-8 shadow-2xl backdrop-blur-xl border border-white/20">
-        <div className="mb-7 text-center">
+      <div className="relative w-full max-w-md animate-scale-in rounded-3xl border border-black/5 bg-white/80 p-8 shadow-[0_24px_60px_-20px_rgba(38,48,36,0.25)] backdrop-blur-xl">
+        <div className="mb-8 text-center">
           <div
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg"
+            className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm"
             style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
           >
-            <CheckSquare className="h-8 w-8 text-white" strokeWidth={2.5} />
+            <CheckSquare className="h-7 w-7 text-white" strokeWidth={2.2} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800">TaskFlow Life</h1>
-          <p className="mt-1.5 text-sm text-slate-500">Organize tasks, track habits, achieve goals</p>
+          <h1 className="font-display text-3xl font-bold tracking-tight" style={{ color: ink }}>TaskFlow Life</h1>
+          <p className="mt-1.5 text-sm" style={{ color: sub }}>Organize tasks, track habits, achieve goals</p>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-2.5">
+        <div className="mb-6 grid grid-cols-2 gap-2">
           {[
             { icon: Calendar, label: 'Tasks' },
             { icon: Trophy, label: 'Goals' },
             { icon: Flame, label: 'Habits' },
             { icon: Clock, label: 'Time' },
           ].map((f) => (
-            <div key={f.label} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 transition-colors hover:bg-slate-50">
+            <div key={f.label} className="flex items-center gap-2 rounded-xl border border-black/5 bg-white/60 px-3 py-2.5">
               <f.icon className="h-4 w-4" style={{ color: theme.primary }} strokeWidth={2} />
-              <span className="text-xs font-medium text-slate-600">{f.label}</span>
+              <span className="text-xs font-medium" style={{ color: sub }}>{f.label}</span>
             </div>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: '#9aa897' }} />
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              className="w-full rounded-xl border border-black/8 bg-white/90 py-3 pl-11 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#5f744e] focus:ring-2 focus:ring-[#5f744e]/15"
+              style={{ color: ink }}
             />
           </div>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2" style={{ color: '#9aa897' }} />
             <input
               type="password"
               placeholder="Password"
@@ -84,32 +87,33 @@ export default function AuthScreen() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              className="w-full rounded-xl border border-black/8 bg-white/90 py-3 pl-11 pr-4 text-sm outline-none transition-all duration-200 focus:border-[#5f744e] focus:ring-2 focus:ring-[#5f744e]/15"
+              style={{ color: ink }}
             />
           </div>
 
           {error && (
-            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-100">{error}</div>
+            <div className="rounded-xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-sm text-red-700">{error}</div>
           )}
 
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100"
+            className="w-full rounded-xl py-3 font-semibold text-white shadow-[0_6px_20px_-6px_rgba(95,116,78,0.5)] transition-all duration-200 hover:brightness-105 active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100"
             style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
           >
-            {busy ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
+            {busy ? 'Please wait…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
-        <p className="mt-5 text-center text-sm text-slate-500">
+        <p className="mt-5 text-center text-sm" style={{ color: sub }}>
           {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
           <button
             onClick={() => {
               setMode(mode === 'signin' ? 'signup' : 'signin');
               setError('');
             }}
-            className="font-semibold transition-colors hover:underline"
+            className="font-semibold underline-offset-2 hover:underline"
             style={{ color: theme.primary }}
           >
             {mode === 'signin' ? 'Sign Up' : 'Sign In'}

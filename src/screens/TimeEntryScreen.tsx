@@ -199,11 +199,11 @@ export default function TimeEntryScreen() {
     <div className="mx-auto max-w-2xl px-4 py-6">
       {/* Date Navigation */}
       <div className="mb-4 flex items-center justify-between">
-        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
+        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-[#8a9a83] transition-all hover:bg-[#f0f3ed] active:scale-90">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h2 className="text-lg font-semibold text-slate-700">{format(parseISO(selectedDate), 'EEEE, MMM d')}</h2>
-        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
+        <h2 className="text-lg font-semibold text-[#263024]">{format(parseISO(selectedDate), 'EEEE, MMM d')}</h2>
+        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-[#8a9a83] transition-all hover:bg-[#f0f3ed] active:scale-90">
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
@@ -228,32 +228,32 @@ export default function TimeEntryScreen() {
       {/* Time Entries */}
       <div className="space-y-2 mb-6">
         {entries.length === 0 && (
-          <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-            <Clock className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-            <p className="text-slate-400">No time entries for this day. Tap + to add one!</p>
+          <div className="rounded-xl border border-dashed border-black/8 p-8 text-center">
+            <Clock className="mx-auto mb-3 h-10 w-10 text-[#b4c1ad]" />
+            <p className="text-[#8a9a83]">No time entries for this day. Tap + to add one!</p>
           </div>
         )}
         {entries.map((entry) => {
           const dur = calcDuration(entry.start_time, entry.end_time);
           const color = getClassificationColor(entry.classification);
           return (
-            <div key={entry.id} className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
+            <div key={entry.id} className="group flex items-center gap-3 rounded-xl border border-black/5 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
               style={{ borderLeft: `4px solid ${color}` }}
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-700">{entry.activity}</p>
-                <div className="mt-1 flex flex-wrap gap-2 text-xs text-slate-400">
+                <p className="text-sm font-medium text-[#263024]">{entry.activity}</p>
+                <div className="mt-1 flex flex-wrap gap-2 text-xs text-[#8a9a83]">
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {entry.start_time} - {entry.end_time}</span>
                   <span className="flex items-center gap-1"><Tag className="h-3 w-3" /> {entry.category}</span>
                   <span className="flex items-center gap-1"><Folder className="h-3 w-3" /> {entry.classification}</span>
                 </div>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-bold text-slate-700">{dur.hours}h {dur.minutes}m</p>
+                <p className="text-sm font-bold text-[#263024]">{dur.hours}h {dur.minutes}m</p>
               </div>
               <button
                 onClick={() => handleDeleteEntry(entry.id)}
-                className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                className="flex-shrink-0 rounded-lg p-1.5 text-[#b4c1ad] opacity-0 transition-all hover:bg-red-50/70 hover:text-red-700 group-hover:opacity-100"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -266,19 +266,19 @@ export default function TimeEntryScreen() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setShowExport(true)}
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
+          className="flex items-center gap-2 rounded-xl border border-black/8 bg-white px-3.5 py-2 text-xs font-medium text-[#3d4a37] shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
         >
           <Download className="h-3.5 w-3.5" /> Export
         </button>
         <button
           onClick={() => setShowCategory(true)}
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
+          className="flex items-center gap-2 rounded-xl border border-black/8 bg-white px-3.5 py-2 text-xs font-medium text-[#3d4a37] shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
         >
           <Tag className="h-3.5 w-3.5" /> Categories
         </button>
         <button
           onClick={() => setShowClassification(true)}
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
+          className="flex items-center gap-2 rounded-xl border border-black/8 bg-white px-3.5 py-2 text-xs font-medium text-[#3d4a37] shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
         >
           <Folder className="h-3.5 w-3.5" /> Classifications
         </button>
@@ -287,21 +287,21 @@ export default function TimeEntryScreen() {
       {/* Category/Classification Pills */}
       <div className="space-y-3">
         <div>
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Categories</h4>
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#8a9a83]">Categories</h4>
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
-              <div key={cat.id} className="group flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
+              <div key={cat.id} className="group flex items-center gap-1 rounded-lg bg-[#f0f3ed] px-3 py-1.5 text-xs font-medium text-[#3d4a37]">
                 {cat.name}
-                <button onClick={() => handleDeleteCategory(cat.id)} className="text-slate-300 hover:text-red-500">
+                <button onClick={() => handleDeleteCategory(cat.id)} className="text-[#b4c1ad] hover:text-red-700">
                   <X className="h-3 w-3" />
                 </button>
               </div>
             ))}
-            {categories.length === 0 && <p className="text-xs text-slate-400">No categories yet</p>}
+            {categories.length === 0 && <p className="text-xs text-[#8a9a83]">No categories yet</p>}
           </div>
         </div>
         <div>
-          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Classifications</h4>
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-[#8a9a83]">Classifications</h4>
           <div className="flex flex-wrap gap-2">
             {classifications.map((cls) => (
               <div key={cls.id} className="group flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white"
@@ -313,7 +313,7 @@ export default function TimeEntryScreen() {
                 </button>
               </div>
             ))}
-            {classifications.length === 0 && <p className="text-xs text-slate-400">No classifications yet</p>}
+            {classifications.length === 0 && <p className="text-xs text-[#8a9a83]">No classifications yet</p>}
           </div>
         </div>
       </div>
@@ -332,42 +332,42 @@ export default function TimeEntryScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowAddEntry(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">New Time Entry</h3>
-              <button onClick={() => setShowAddEntry(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
+              <h3 className="text-lg font-bold text-[#1a2318]">New Time Entry</h3>
+              <button onClick={() => setShowAddEntry(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Activity name" value={newActivity}
               onChange={(e) => setNewActivity(e.target.value)}
               autoFocus
-              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              className="mb-3 w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
             <div className="mb-3 grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-500">Start Time</label>
+                <label className="mb-1 block text-xs font-semibold text-[#5d6b56]">Start Time</label>
                 <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  className="w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-500">End Time</label>
+                <label className="mb-1 block text-xs font-semibold text-[#5d6b56]">End Time</label>
                 <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  className="w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
             </div>
             <div className="mb-3">
-              <label className="mb-1 block text-xs font-semibold text-slate-500">Category</label>
+              <label className="mb-1 block text-xs font-semibold text-[#5d6b56]">Category</label>
               <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400"
+                className="w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400"
               >
                 <option value="">Select category</option>
                 {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
             </div>
             <div className="mb-4">
-              <label className="mb-1 block text-xs font-semibold text-slate-500">Classification</label>
+              <label className="mb-1 block text-xs font-semibold text-[#5d6b56]">Classification</label>
               <select value={selectedClassification} onChange={(e) => setSelectedClassification(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400"
+                className="w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400"
               >
                 <option value="">Select classification</option>
                 {classifications.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
@@ -389,20 +389,20 @@ export default function TimeEntryScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowExport(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Export Time Entries</h3>
-              <button onClick={() => setShowExport(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
+              <h3 className="text-lg font-bold text-[#1a2318]">Export Time Entries</h3>
+              <button onClick={() => setShowExport(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]"><X className="h-5 w-5" /></button>
             </div>
             <div className="mb-4 grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-500">Start Date</label>
+                <label className="mb-1 block text-xs font-semibold text-[#5d6b56]">Start Date</label>
                 <input type="date" value={exportStart} onChange={(e) => setExportStart(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  className="w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-500">End Date</label>
+                <label className="mb-1 block text-xs font-semibold text-[#5d6b56]">End Date</label>
                 <input type="date" value={exportEnd} onChange={(e) => setExportEnd(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+                  className="w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
             </div>
@@ -422,15 +422,15 @@ export default function TimeEntryScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowCategory(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Add Category</h3>
-              <button onClick={() => setShowCategory(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
+              <h3 className="text-lg font-bold text-[#1a2318]">Add Category</h3>
+              <button onClick={() => setShowCategory(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Category name" value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
               autoFocus
-              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              className="mb-4 w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
             <button
               onClick={handleAddCategory}
@@ -448,15 +448,15 @@ export default function TimeEntryScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowClassification(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Add Classification</h3>
-              <button onClick={() => setShowClassification(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
+              <h3 className="text-lg font-bold text-[#1a2318]">Add Classification</h3>
+              <button onClick={() => setShowClassification(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Classification name" value={newClassificationName}
               onChange={(e) => setNewClassificationName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddClassification()}
               autoFocus
-              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+              className="mb-4 w-full rounded-xl border border-black/8 px-4 py-3 text-sm text-[#263024] outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
             <button
               onClick={handleAddClassification}

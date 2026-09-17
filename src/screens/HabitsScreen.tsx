@@ -180,7 +180,7 @@ export default function HabitsScreen() {
               key={dateStr}
               onClick={() => handleToggleLog(habitId, dateStr)}
               className={`h-7 w-7 rounded-md transition-all duration-150 active:scale-90 ${
-                isDone ? 'text-white' : 'bg-slate-100 text-slate-300 hover:bg-slate-200'
+                isDone ? 'text-white' : 'bg-[#f0f3ed] text-[#b4c1ad] hover:bg-black/8'
               }`}
               style={isDone ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
               title={dateStr}
@@ -199,16 +199,16 @@ export default function HabitsScreen() {
       {/* Habits Section */}
       <div className="mb-6">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-700">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#263024]">
             <Flame className="h-5 w-5" style={{ color: theme.primary }} />
             Habits
           </h2>
         </div>
 
         {habits.length === 0 && (
-          <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-            <Flame className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-            <p className="text-slate-400">No habits yet. Tap + to start tracking!</p>
+          <div className="rounded-xl border border-dashed border-black/8 p-8 text-center">
+            <Flame className="mx-auto mb-3 h-10 w-10 text-[#b4c1ad]" />
+            <p className="text-[#8a9a83]">No habits yet. Tap + to start tracking!</p>
           </div>
         )}
 
@@ -219,7 +219,7 @@ export default function HabitsScreen() {
             const doneToday = logs.some((l) => l.habit_id === habit.id && l.date === todayStr && l.completed);
 
             return (
-              <div key={habit.id} className="group rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in">
+              <div key={habit.id} className="group rounded-2xl border border-black/5 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in">
                 <div className="mb-3 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <button
@@ -230,33 +230,33 @@ export default function HabitsScreen() {
                         : { background: '#f1f5f9' }
                       }
                     >
-                      {doneToday ? <Check className="h-5 w-5 text-white" /> : <Flame className="h-5 w-5 text-slate-400" />}
+                      {doneToday ? <Check className="h-5 w-5 text-white" /> : <Flame className="h-5 w-5 text-[#8a9a83]" />}
                     </button>
                     <div>
-                      <h3 className="font-semibold text-slate-700">{habit.name}</h3>
-                      <p className="text-xs text-slate-400 capitalize">{habit.type}</p>
+                      <h3 className="font-semibold text-[#263024]">{habit.name}</h3>
+                      <p className="text-xs text-[#8a9a83] capitalize">{habit.type}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => handleDeleteHabit(habit.id)}
-                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    className="rounded-lg p-1.5 text-[#b4c1ad] opacity-0 transition-all hover:bg-red-50/70 hover:text-red-700 group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
 
                 <div className="mb-3 grid grid-cols-3 gap-2">
-                  <div className="rounded-lg bg-slate-50 p-2 text-center">
-                    <p className="text-xs text-slate-400">Total Days</p>
-                    <p className="text-lg font-bold text-slate-700">{stats.totalDays}</p>
+                  <div className="rounded-lg bg-white/60 p-2 text-center">
+                    <p className="text-xs text-[#8a9a83]">Total Days</p>
+                    <p className="text-lg font-bold text-[#263024]">{stats.totalDays}</p>
                   </div>
                   <div className="rounded-lg p-2 text-center" style={{ background: `${theme.primary}15` }}>
-                    <p className="text-xs text-slate-400">Streak</p>
+                    <p className="text-xs text-[#8a9a83]">Streak</p>
                     <p className="text-lg font-bold" style={{ color: theme.primary }}>{stats.currentStreak}</p>
                   </div>
-                  <div className="rounded-lg bg-slate-50 p-2 text-center">
-                    <p className="text-xs text-slate-400">Success</p>
-                    <p className="text-lg font-bold text-slate-700">{stats.successRate}%</p>
+                  <div className="rounded-lg bg-white/60 p-2 text-center">
+                    <p className="text-xs text-[#8a9a83]">Success</p>
+                    <p className="text-lg font-bold text-[#263024]">{stats.successRate}%</p>
                   </div>
                 </div>
 
@@ -270,7 +270,7 @@ export default function HabitsScreen() {
       {/* Books Section */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-700">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-[#263024]">
             <BookOpen className="h-5 w-5" style={{ color: theme.primary }} />
             Books
           </h2>
@@ -285,14 +285,14 @@ export default function HabitsScreen() {
 
         {readingBooks.length > 0 && (
           <div className="mb-3">
-            <h3 className="mb-2 text-sm font-medium text-slate-500">Currently Reading</h3>
+            <h3 className="mb-2 text-sm font-medium text-[#5d6b56]">Currently Reading</h3>
             <div className="space-y-2">
               {readingBooks.map((book) => (
-                <div key={book.id} className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm animate-fade-in">
-                  <Book className="h-5 w-5 flex-shrink-0 text-slate-400" />
+                <div key={book.id} className="group flex items-center gap-3 rounded-xl border border-black/5 bg-white p-3 shadow-sm animate-fade-in">
+                  <Book className="h-5 w-5 flex-shrink-0 text-[#8a9a83]" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-700 truncate">{book.title}</p>
-                    {book.author && <p className="text-xs text-slate-400 truncate">{book.author}</p>}
+                    <p className="text-sm font-medium text-[#263024] truncate">{book.title}</p>
+                    {book.author && <p className="text-xs text-[#8a9a83] truncate">{book.author}</p>}
                   </div>
                   <button
                     onClick={() => handleToggleBook(book)}
@@ -303,7 +303,7 @@ export default function HabitsScreen() {
                   </button>
                   <button
                     onClick={() => handleDeleteBook(book.id)}
-                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    className="rounded-lg p-1.5 text-[#b4c1ad] opacity-0 transition-all hover:bg-red-50/70 hover:text-red-700 group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -315,18 +315,18 @@ export default function HabitsScreen() {
 
         {completedBooks.length > 0 && (
           <div className="mb-3">
-            <h3 className="mb-2 text-sm font-medium text-slate-500">Completed ({completedBooks.length})</h3>
+            <h3 className="mb-2 text-sm font-medium text-[#5d6b56]">Completed ({completedBooks.length})</h3>
             <div className="space-y-2">
               {completedBooks.map((book) => (
-                <div key={book.id} className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm animate-fade-in">
+                <div key={book.id} className="group flex items-center gap-3 rounded-xl border border-black/5 bg-white p-3 shadow-sm animate-fade-in">
                   <Check className="h-5 w-5 flex-shrink-0 text-green-500" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-500 line-through truncate">{book.title}</p>
-                    {book.author && <p className="text-xs text-slate-400 truncate">{book.author}</p>}
+                    <p className="text-sm font-medium text-[#5d6b56] line-through truncate">{book.title}</p>
+                    {book.author && <p className="text-xs text-[#8a9a83] truncate">{book.author}</p>}
                   </div>
                   <button
                     onClick={() => handleDeleteBook(book.id)}
-                    className="rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+                    className="rounded-lg p-1.5 text-[#b4c1ad] opacity-0 transition-all hover:bg-red-50/70 hover:text-red-700 group-hover:opacity-100"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -337,9 +337,9 @@ export default function HabitsScreen() {
         )}
 
         {books.length === 0 && (
-          <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-            <BookOpen className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-            <p className="text-slate-400">No books yet. Tap "Add Book" to start your reading list!</p>
+          <div className="rounded-xl border border-dashed border-black/8 p-8 text-center">
+            <BookOpen className="mx-auto mb-3 h-10 w-10 text-[#b4c1ad]" />
+            <p className="text-[#8a9a83]">No books yet. Tap "Add Book" to start your reading list!</p>
           </div>
         )}
       </div>
@@ -358,25 +358,25 @@ export default function HabitsScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowAddHabit(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">New Habit</h3>
-              <button onClick={() => setShowAddHabit(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
+              <h3 className="text-lg font-bold text-[#1a2318]">New Habit</h3>
+              <button onClick={() => setShowAddHabit(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Habit name" value={newHabitName}
               onChange={(e) => setNewHabitName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()}
               autoFocus
-              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+              className="mb-3 w-full rounded-xl border border-black/8 px-4 py-3 text-[#263024] outline-none transition-colors focus:border-slate-400"
             />
             <div className="mb-4">
-              <label className="mb-1 block text-xs font-semibold text-slate-500">Type</label>
+              <label className="mb-1 block text-xs font-semibold text-[#5d6b56]">Type</label>
               <div className="flex flex-wrap gap-2">
                 {habitTypes.map((t) => (
                   <button
                     key={t}
                     onClick={() => setNewHabitType(t)}
                     className={`rounded-lg px-3 py-1.5 text-xs font-medium capitalize transition-all duration-200 ${
-                      newHabitType === t ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      newHabitType === t ? 'text-white shadow-sm' : 'bg-[#f0f3ed] text-[#5d6b56] hover:bg-black/8'
                     }`}
                     style={newHabitType === t ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
                   >
@@ -401,21 +401,21 @@ export default function HabitsScreen() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowAddBook(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">Add Book</h3>
-              <button onClick={() => setShowAddBook(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
+              <h3 className="text-lg font-bold text-[#1a2318]">Add Book</h3>
+              <button onClick={() => setShowAddBook(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Book title" value={newBookTitle}
               onChange={(e) => setNewBookTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddBook()}
               autoFocus
-              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+              className="mb-3 w-full rounded-xl border border-black/8 px-4 py-3 text-[#263024] outline-none transition-colors focus:border-slate-400"
             />
             <input
               type="text" placeholder="Author (optional)" value={newBookAuthor}
               onChange={(e) => setNewBookAuthor(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddBook()}
-              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+              className="mb-4 w-full rounded-xl border border-black/8 px-4 py-3 text-[#263024] outline-none transition-colors focus:border-slate-400"
             />
             <button
               onClick={handleAddBook}

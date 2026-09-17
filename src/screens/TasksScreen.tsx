@@ -252,30 +252,30 @@ export default function TasksScreen() {
   const renderTaskItem = (task: ExpandedTask) => (
     <div
       key={task.id + (task.is_recurring_instance ? '_' + task.date : '')}
-      className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
+      className="group flex items-center gap-3 rounded-xl border border-black/5 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
     >
       <button onClick={() => handleToggle(task)} className="flex-shrink-0 transition-transform active:scale-90">
         {task.completed ? (
           <CheckCircle2 className="h-7 w-7 transition-colors" style={{ color: '#22c55e' }} />
         ) : (
-          <Circle className="h-7 w-7 text-slate-300 transition-colors group-hover:text-slate-400" />
+          <Circle className="h-7 w-7 text-[#b4c1ad] transition-colors group-hover:text-[#8a9a83]" />
         )}
       </button>
       <div className="flex-1 min-w-0">
         <span
-          className={`text-sm font-medium transition-all ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}
+          className={`text-sm font-medium transition-all ${task.completed ? 'text-[#8a9a83] line-through' : 'text-[#263024]'}`}
         >
           {task.title}
         </span>
         <div className="mt-1 flex flex-wrap gap-2">
           {task.repeat_pattern && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+            <span className="inline-flex items-center gap-1 rounded-md bg-[#f0f3ed] px-2 py-0.5 text-xs text-[#5d6b56]">
               <Repeat className="h-3 w-3" /> {task.repeat_pattern}
-              {task.repeat_end_date && <span className="text-slate-400">until {format(parseISO(task.repeat_end_date), 'MMM d')}</span>}
+              {task.repeat_end_date && <span className="text-[#8a9a83]">until {format(parseISO(task.repeat_end_date), 'MMM d')}</span>}
             </span>
           )}
           {task.reminder_time && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-600">
+            <span className="inline-flex items-center gap-1 rounded-md bg-amber-50/70 px-2 py-0.5 text-xs text-amber-700">
               <Bell className="h-3 w-3" /> {task.reminder_time}
             </span>
           )}
@@ -283,7 +283,7 @@ export default function TasksScreen() {
       </div>
       <button
         onClick={() => handleDelete(task)}
-        className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+        className="flex-shrink-0 rounded-lg p-1.5 text-[#b4c1ad] opacity-0 transition-all hover:bg-red-50/70 hover:text-red-700 group-hover:opacity-100"
       >
         <Trash2 className="h-5 w-5" />
       </button>
@@ -304,10 +304,10 @@ export default function TasksScreen() {
     }
 
     return (
-      <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="mb-6 rounded-2xl border border-black/5 bg-white p-4 shadow-sm">
         <div className="grid grid-cols-7 gap-1 mb-2">
           {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
-            <div key={d} className="text-center text-xs font-semibold text-slate-400 py-1">{d}</div>
+            <div key={d} className="text-center text-xs font-semibold text-[#8a9a83] py-1">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -325,7 +325,7 @@ export default function TasksScreen() {
                 key={i}
                 onClick={() => setSelectedDate(dateStr)}
                 className={`relative flex flex-col items-center justify-center rounded-lg py-2 text-sm transition-all duration-150
-                  ${isSelected ? 'text-white font-bold scale-[1.02]' : isCurrentMonth ? 'text-slate-600 hover:bg-slate-50' : 'text-slate-300'}
+                  ${isSelected ? 'text-white font-bold scale-[1.02]' : isCurrentMonth ? 'text-[#3d4a37] hover:bg-white/60' : 'text-[#b4c1ad]'}
                 `}
                 style={isSelected ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
               >
@@ -357,18 +357,18 @@ export default function TasksScreen() {
           const dayTasks = weekTasks[date] ?? [];
           return (
             <div key={date}>
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-500">
+              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#5d6b56]">
                 {format(parseISO(date), 'EEE, MMM d')}
                 {isToday(parseISO(date)) && (
                   <span className="rounded-full px-2 py-0.5 text-xs text-white" style={{ background: theme.primary }}>
                     Today
                   </span>
                 )}
-                <span className="text-xs text-slate-400">({dayTasks.length})</span>
+                <span className="text-xs text-[#8a9a83]">({dayTasks.length})</span>
               </h3>
               <div className="space-y-2">
                 {dayTasks.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-slate-200 p-3 text-center text-xs text-slate-400">
+                  <div className="rounded-xl border border-dashed border-black/8 p-3 text-center text-xs text-[#8a9a83]">
                     No tasks
                   </div>
                 )}
@@ -384,29 +384,29 @@ export default function TasksScreen() {
   const renderGoals = (goals: (MonthlyGoal | YearlyGoal)[], table: 'monthly_goals' | 'yearly_goals') => (
     <div className="space-y-2">
       {goals.length === 0 && (
-        <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-          <Target className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-          <p className="text-slate-400">No goals yet. Tap + to add one!</p>
+        <div className="rounded-xl border border-dashed border-black/8 p-8 text-center">
+          <Target className="mx-auto mb-3 h-10 w-10 text-[#b4c1ad]" />
+          <p className="text-[#8a9a83]">No goals yet. Tap + to add one!</p>
         </div>
       )}
       {goals.map((goal) => (
         <div
           key={goal.id}
-          className="group flex items-center gap-3 rounded-xl border border-slate-100 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
+          className="group flex items-center gap-3 rounded-xl border border-black/5 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in"
         >
           <button onClick={() => handleToggleGoal(goal, table)} className="flex-shrink-0 transition-transform active:scale-90">
             {goal.completed ? (
               <Trophy className="h-7 w-7" style={{ color: '#22c55e' }} />
             ) : (
-              <Circle className="h-7 w-7 text-slate-300 transition-colors group-hover:text-slate-400" />
+              <Circle className="h-7 w-7 text-[#b4c1ad] transition-colors group-hover:text-[#8a9a83]" />
             )}
           </button>
-          <span className={`flex-1 text-sm font-medium transition-all ${goal.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
+          <span className={`flex-1 text-sm font-medium transition-all ${goal.completed ? 'text-[#8a9a83] line-through' : 'text-[#263024]'}`}>
             {goal.title}
           </span>
           <button
             onClick={() => handleDeleteGoal(goal.id, table)}
-            className="flex-shrink-0 rounded-lg p-1.5 text-slate-300 opacity-0 transition-all hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+            className="flex-shrink-0 rounded-lg p-1.5 text-[#b4c1ad] opacity-0 transition-all hover:bg-red-50/70 hover:text-red-700 group-hover:opacity-100"
           >
             <Trash2 className="h-5 w-5" />
           </button>
@@ -418,13 +418,13 @@ export default function TasksScreen() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       {/* View Mode Switcher */}
-      <div className="mb-4 flex gap-1 rounded-xl bg-slate-100 p-1">
+      <div className="mb-4 flex gap-1 rounded-xl bg-[#f0f3ed] p-1">
         {(['calendar', 'week', 'monthly', 'yearly'] as ViewMode[]).map((mode) => (
           <button
             key={mode}
             onClick={() => setViewMode(mode)}
             className={`flex-1 rounded-lg py-2 text-xs font-semibold capitalize transition-all duration-200 ${
-              viewMode === mode ? 'bg-white shadow-sm' : 'text-slate-500'
+              viewMode === mode ? 'bg-white shadow-sm' : 'text-[#5d6b56]'
             }`}
             style={viewMode === mode ? { color: theme.primary } : {}}
           >
@@ -435,11 +435,11 @@ export default function TasksScreen() {
 
       {/* Date Navigation */}
       <div className="mb-4 flex items-center justify-between">
-        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
+        <button onClick={() => navigateDate(-1)} className="rounded-lg p-2 text-[#8a9a83] transition-all hover:bg-[#f0f3ed] active:scale-90">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <h2 className="text-lg font-semibold text-slate-700">{getDateLabel()}</h2>
-        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-slate-400 transition-all hover:bg-slate-100 active:scale-90">
+        <h2 className="text-lg font-semibold text-[#263024]">{getDateLabel()}</h2>
+        <button onClick={() => navigateDate(1)} className="rounded-lg p-2 text-[#8a9a83] transition-all hover:bg-[#f0f3ed] active:scale-90">
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
@@ -450,9 +450,9 @@ export default function TasksScreen() {
           {renderCalendar()}
           <div className="space-y-2">
             {expanded.length === 0 && (
-              <div className="rounded-xl border border-dashed border-slate-200 p-8 text-center">
-                <Calendar className="mx-auto mb-3 h-10 w-10 text-slate-300" />
-                <p className="text-slate-400">No tasks for this day. Tap + to add one!</p>
+              <div className="rounded-xl border border-dashed border-black/8 p-8 text-center">
+                <Calendar className="mx-auto mb-3 h-10 w-10 text-[#b4c1ad]" />
+                <p className="text-[#8a9a83]">No tasks for this day. Tap + to add one!</p>
               </div>
             )}
             {expanded.map(renderTaskItem)}
@@ -467,12 +467,12 @@ export default function TasksScreen() {
           <div className="mb-4 rounded-xl bg-white p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-1">
               <Trophy className="h-5 w-5" style={{ color: theme.primary }} />
-              <h3 className="font-semibold text-slate-700">Monthly Goals</h3>
+              <h3 className="font-semibold text-[#263024]">Monthly Goals</h3>
             </div>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[#8a9a83]">
               {monthlyGoals.filter((g) => g.completed).length} of {monthlyGoals.length} completed
             </p>
-            <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="mt-2 h-2 rounded-full bg-[#f0f3ed] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -491,12 +491,12 @@ export default function TasksScreen() {
           <div className="mb-4 rounded-xl bg-white p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-1">
               <Target className="h-5 w-5" style={{ color: theme.primary }} />
-              <h3 className="font-semibold text-slate-700">Yearly Goals</h3>
+              <h3 className="font-semibold text-[#263024]">Yearly Goals</h3>
             </div>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-[#8a9a83]">
               {yearlyGoals.filter((g) => g.completed).length} of {yearlyGoals.length} completed
             </p>
-            <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
+            <div className="mt-2 h-2 rounded-full bg-[#f0f3ed] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
@@ -527,8 +527,8 @@ export default function TasksScreen() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">New Task</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-slate-400 transition-colors hover:text-slate-600">
+              <h3 className="text-lg font-bold text-[#1a2318]">New Task</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -539,10 +539,10 @@ export default function TasksScreen() {
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
               autoFocus
-              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+              className="mb-3 w-full rounded-xl border border-black/8 px-4 py-3 text-[#263024] outline-none transition-colors focus:border-slate-400"
             />
             <div className="mb-3">
-              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#5d6b56]">
                 <Repeat className="h-3.5 w-3.5" /> Repeat
               </label>
               <div className="flex gap-2">
@@ -551,7 +551,7 @@ export default function TasksScreen() {
                     key={p}
                     onClick={() => setRepeatPattern(p)}
                     className={`flex-1 rounded-lg py-2 text-xs font-medium capitalize transition-all duration-200 ${
-                      repeatPattern === p ? 'text-white shadow-sm' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                      repeatPattern === p ? 'text-white shadow-sm' : 'bg-[#f0f3ed] text-[#5d6b56] hover:bg-black/8'
                     }`}
                     style={repeatPattern === p ? { background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` } : {}}
                   >
@@ -562,7 +562,7 @@ export default function TasksScreen() {
             </div>
             {repeatPattern && (
               <div className="mb-3 animate-fade-in">
-                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+                <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#5d6b56]">
                   <CalendarDays className="h-3.5 w-3.5" /> Repeat Until (optional)
                 </label>
                 <input
@@ -570,19 +570,19 @@ export default function TasksScreen() {
                   value={repeatEndDate}
                   min={selectedDate}
                   onChange={(e) => setRepeatEndDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+                  className="w-full rounded-xl border border-black/8 px-4 py-3 text-[#263024] outline-none transition-colors focus:border-slate-400"
                 />
               </div>
             )}
             <div className="mb-4">
-              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-500">
+              <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-[#5d6b56]">
                 <Bell className="h-3.5 w-3.5" /> Reminder Time (optional)
               </label>
               <input
                 type="time"
                 value={reminderTime}
                 onChange={(e) => setReminderTime(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+                className="w-full rounded-xl border border-black/8 px-4 py-3 text-[#263024] outline-none transition-colors focus:border-slate-400"
               />
             </div>
             <button
@@ -604,10 +604,10 @@ export default function TasksScreen() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-slate-800">
+              <h3 className="text-lg font-bold text-[#1a2318]">
                 New {viewMode === 'monthly' ? 'Monthly' : 'Yearly'} Goal
               </h3>
-              <button onClick={() => setShowGoalModal(false)} className="text-slate-400 transition-colors hover:text-slate-600">
+              <button onClick={() => setShowGoalModal(false)} className="text-[#8a9a83] transition-colors hover:text-[#3d4a37]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -618,7 +618,7 @@ export default function TasksScreen() {
               onChange={(e) => setNewGoalTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
               autoFocus
-              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-colors focus:border-slate-400"
+              className="mb-4 w-full rounded-xl border border-black/8 px-4 py-3 text-[#263024] outline-none transition-colors focus:border-slate-400"
             />
             <button
               onClick={handleAddGoal}

@@ -109,15 +109,15 @@ export default function AnalyticsScreen() {
   const pieColors = ['#16a34a', '#dc2626', '#d97706'];
 
   const StatCard = ({ icon, label, value, sublabel, color }: { icon: React.ReactNode; label: string; value: string; sublabel?: string; color: string }) => (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in">
+    <div className="rounded-2xl border border-black/8 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in">
       <div className="mb-2 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `${color}15` }}>
           {icon}
         </div>
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wide text-[#5d6b56]">{label}</span>
       </div>
-      <p className="text-2xl font-bold tracking-tight text-slate-800">{value}</p>
-      {sublabel && <p className="text-xs text-slate-400 mt-0.5">{sublabel}</p>}
+      <p className="text-2xl font-bold tracking-tight text-[#1a2318]">{value}</p>
+      {sublabel && <p className="text-xs text-[#8a9a83] mt-0.5">{sublabel}</p>}
     </div>
   );
 
@@ -155,15 +155,15 @@ export default function AnalyticsScreen() {
 
       {/* Goals Progress */}
       <div className="mb-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
+        <div className="rounded-2xl border border-black/8 bg-white p-4 shadow-sm animate-fade-in">
           <div className="mb-2 flex items-center gap-2">
             <Target className="h-4 w-4" style={{ color: theme.primary }} />
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Monthly</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-[#5d6b56]">Monthly</span>
           </div>
-          <p className="text-2xl font-bold tracking-tight text-slate-800">
-            {goalStats.monthlyCompleted}<span className="text-base text-slate-400">/{goalStats.monthlyTotal}</span>
+          <p className="text-2xl font-bold tracking-tight text-[#1a2318]">
+            {goalStats.monthlyCompleted}<span className="text-base text-[#8a9a83]">/{goalStats.monthlyTotal}</span>
           </p>
-          <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="mt-2 h-1.5 rounded-full bg-[#e8eee4] overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${goalStats.monthlyTotal > 0 ? (goalStats.monthlyCompleted / goalStats.monthlyTotal) * 100 : 0}%`,
@@ -172,15 +172,15 @@ export default function AnalyticsScreen() {
             />
           </div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
+        <div className="rounded-2xl border border-black/8 bg-white p-4 shadow-sm animate-fade-in">
           <div className="mb-2 flex items-center gap-2">
             <Target className="h-4 w-4" style={{ color: theme.primary }} />
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Yearly</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-[#5d6b56]">Yearly</span>
           </div>
-          <p className="text-2xl font-bold tracking-tight text-slate-800">
-            {goalStats.yearlyCompleted}<span className="text-base text-slate-400">/{goalStats.yearlyTotal}</span>
+          <p className="text-2xl font-bold tracking-tight text-[#1a2318]">
+            {goalStats.yearlyCompleted}<span className="text-base text-[#8a9a83]">/{goalStats.yearlyTotal}</span>
           </p>
-          <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+          <div className="mt-2 h-1.5 rounded-full bg-[#e8eee4] overflow-hidden">
             <div className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${goalStats.yearlyTotal > 0 ? (goalStats.yearlyCompleted / goalStats.yearlyTotal) * 100 : 0}%`,
@@ -192,16 +192,16 @@ export default function AnalyticsScreen() {
       </div>
 
       {/* Week Chart */}
-      <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
-        <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Task Completion (Last 7 Days)</h3>
+      <div className="mb-4 rounded-2xl border border-black/8 bg-white p-4 shadow-sm animate-fade-in">
+        <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#5d6b56]">Task Completion (Last 7 Days)</h3>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={weekData} barGap={4}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-            <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e8eee4" vertical={false} />
+            <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#8a9a83' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#8a9a83' }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip
-              contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-              cursor={{ fill: '#f8fafc' }}
+              contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+              cursor={{ fill: '#f0f3ed' }}
             />
             <Bar dataKey="tasks" fill={theme.primary} radius={[4, 4, 0, 0]} name="Total" maxBarSize={28} />
             <Bar dataKey="completed" fill="#22c55e" radius={[4, 4, 0, 0]} name="Completed" maxBarSize={28} />
@@ -211,14 +211,14 @@ export default function AnalyticsScreen() {
 
       {/* Time Pie Chart */}
       {pieData.length > 0 && (
-        <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Time Breakdown (This Month)</h3>
+        <div className="mb-4 rounded-2xl border border-black/8 bg-white p-4 shadow-sm animate-fade-in">
+          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#5d6b56]">Time Breakdown (This Month)</h3>
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
               <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={40} paddingAngle={2} label={(e: any) => `${e.name}: ${e.value}h`}>
                 {pieData.map((_, i) => <Cell key={i} fill={pieColors[i]} />)}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -226,17 +226,17 @@ export default function AnalyticsScreen() {
 
       {/* Category Bar Chart */}
       {categoryData.length > 0 && (
-        <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Time by Category (This Month)</h3>
+        <div className="mb-4 rounded-2xl border border-black/8 bg-white p-4 shadow-sm animate-fade-in">
+          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-[#5d6b56]">Time by Category (This Month)</h3>
           <ResponsiveContainer width="100%" height={Math.max(140, categoryData.length * 44)}>
             <BarChart data={categoryData} layout="vertical" barSize={20}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
-              <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={80} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e8eee4" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: '#8a9a83' }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#8a9a83' }} axisLine={false} tickLine={false} width={80} />
               <Tooltip
-                contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+                contentStyle={{ borderRadius: '12px', border: '1px solid rgba(0,0,0,0.08)', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                 formatter={(v: number) => [`${v}h`, 'Hours']}
-                cursor={{ fill: '#f8fafc' }}
+                cursor={{ fill: '#f0f3ed' }}
               />
               <Bar dataKey="minutes" fill={theme.primary} radius={[0, 4, 4, 0]} name="Hours" />
             </BarChart>
