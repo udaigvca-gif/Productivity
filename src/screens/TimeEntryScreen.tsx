@@ -211,15 +211,16 @@ export default function TimeEntryScreen() {
       {/* Total Time Summary */}
       {entries.length > 0 && (
         <div
-          className="mb-4 rounded-2xl p-4 text-white shadow-md"
+          className="relative mb-4 overflow-hidden rounded-2xl p-4 text-white shadow-md animate-fade-in"
           style={{ background: `linear-gradient(135deg, ${theme.timeGradient[0]}, ${theme.timeGradient[1]})` }}
         >
-          <div className="flex items-center justify-between">
+          <div className="pointer-events-none absolute -top-8 -right-8 h-32 w-32 rounded-full opacity-20 blur-2xl bg-white" />
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-sm text-white/80">Total Tracked Time</p>
-              <p className="text-2xl font-bold">{Math.floor(totalTime / 60)}h {totalTime % 60}m</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-white/70">Total Tracked</p>
+              <p className="text-2xl font-bold tracking-tight">{Math.floor(totalTime / 60)}h {totalTime % 60}m</p>
             </div>
-            <Clock className="h-8 w-8 text-white/60" />
+            <Clock className="h-8 w-8 text-white/50" />
           </div>
         </div>
       )}
@@ -265,28 +266,28 @@ export default function TimeEntryScreen() {
       <div className="flex gap-2 mb-4">
         <button
           onClick={() => setShowExport(true)}
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:shadow-md"
+          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
         >
-          <Download className="h-4 w-4" /> Export
+          <Download className="h-3.5 w-3.5" /> Export
         </button>
         <button
           onClick={() => setShowCategory(true)}
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:shadow-md"
+          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
         >
-          <Tag className="h-4 w-4" /> Categories
+          <Tag className="h-3.5 w-3.5" /> Categories
         </button>
         <button
           onClick={() => setShowClassification(true)}
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 shadow-sm transition hover:shadow-md"
+          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-medium text-slate-600 shadow-sm transition-all duration-200 hover:shadow-md active:scale-95"
         >
-          <Folder className="h-4 w-4" /> Classifications
+          <Folder className="h-3.5 w-3.5" /> Classifications
         </button>
       </div>
 
       {/* Category/Classification Pills */}
       <div className="space-y-3">
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-slate-500">Categories</h4>
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Categories</h4>
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <div key={cat.id} className="group flex items-center gap-1 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-600">
@@ -300,7 +301,7 @@ export default function TimeEntryScreen() {
           </div>
         </div>
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-slate-500">Classifications</h4>
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">Classifications</h4>
           <div className="flex flex-wrap gap-2">
             {classifications.map((cls) => (
               <div key={cls.id} className="group flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-white"
@@ -320,44 +321,44 @@ export default function TimeEntryScreen() {
       {/* FAB */}
       <button
         onClick={() => setShowAddEntry(true)}
-        className="fixed bottom-20 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition hover:scale-105"
+        className="fixed bottom-20 right-6 z-20 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-xl transition-all duration-200 hover:scale-110 active:scale-95"
         style={{ background: `linear-gradient(135deg, ${theme.timeGradient[0]}, ${theme.timeGradient[1]})` }}
       >
-        <Plus className="h-7 w-7" />
+        <Plus className="h-6 w-6" />
       </button>
 
       {/* Add Entry Modal */}
       {showAddEntry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowAddEntry(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowAddEntry(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">New Time Entry</h3>
-              <button onClick={() => setShowAddEntry(false)} className="text-slate-400"><X className="h-5 w-5" /></button>
+              <button onClick={() => setShowAddEntry(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Activity name" value={newActivity}
               onChange={(e) => setNewActivity(e.target.value)}
               autoFocus
-              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+              className="mb-3 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
             <div className="mb-3 grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-500">Start Time</label>
                 <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-500">End Time</label>
                 <input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
             </div>
             <div className="mb-3">
               <label className="mb-1 block text-xs font-semibold text-slate-500">Category</label>
               <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400"
               >
                 <option value="">Select category</option>
                 {categories.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
@@ -366,7 +367,7 @@ export default function TimeEntryScreen() {
             <div className="mb-4">
               <label className="mb-1 block text-xs font-semibold text-slate-500">Classification</label>
               <select value={selectedClassification} onChange={(e) => setSelectedClassification(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+                className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400"
               >
                 <option value="">Select classification</option>
                 {classifications.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
@@ -374,7 +375,7 @@ export default function TimeEntryScreen() {
             </div>
             <button
               onClick={handleAddEntry}
-              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${theme.timeGradient[0]}, ${theme.timeGradient[1]})` }}
             >
               Add Entry
@@ -385,29 +386,29 @@ export default function TimeEntryScreen() {
 
       {/* Export Modal */}
       {showExport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowExport(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowExport(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">Export Time Entries</h3>
-              <button onClick={() => setShowExport(false)} className="text-slate-400"><X className="h-5 w-5" /></button>
+              <button onClick={() => setShowExport(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
             </div>
             <div className="mb-4 grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-500">Start Date</label>
                 <input type="date" value={exportStart} onChange={(e) => setExportStart(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-500">End Date</label>
                 <input type="date" value={exportEnd} onChange={(e) => setExportEnd(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
                 />
               </div>
             </div>
             <button
               onClick={handleExport}
-              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${theme.timeGradient[0]}, ${theme.timeGradient[1]})` }}
             >
               Export as CSV
@@ -418,22 +419,22 @@ export default function TimeEntryScreen() {
 
       {/* Category Modal */}
       {showCategory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowCategory(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowCategory(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">Add Category</h3>
-              <button onClick={() => setShowCategory(false)} className="text-slate-400"><X className="h-5 w-5" /></button>
+              <button onClick={() => setShowCategory(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Category name" value={newCategoryName}
               onChange={(e) => setNewCategoryName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
               autoFocus
-              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
             <button
               onClick={handleAddCategory}
-              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
             >
               Add
@@ -444,22 +445,22 @@ export default function TimeEntryScreen() {
 
       {/* Classification Modal */}
       {showClassification && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowClassification(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 animate-fade-in" onClick={() => setShowClassification(false)}>
           <div className="w-full max-w-md animate-scale-in rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-bold text-slate-800">Add Classification</h3>
-              <button onClick={() => setShowClassification(false)} className="text-slate-400"><X className="h-5 w-5" /></button>
+              <button onClick={() => setShowClassification(false)} className="text-slate-400 transition-colors hover:text-slate-600"><X className="h-5 w-5" /></button>
             </div>
             <input
               type="text" placeholder="Classification name" value={newClassificationName}
               onChange={(e) => setNewClassificationName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddClassification()}
               autoFocus
-              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none focus:border-slate-400"
+              className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 outline-none transition-all focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
             <button
               onClick={handleAddClassification}
-              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90"
+              className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
               style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
             >
               Add

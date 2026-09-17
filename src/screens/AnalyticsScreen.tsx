@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { format, subDays, parseISO } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { TrendingUp, CheckCircle2, Flame, Clock, Target } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell
 } from 'recharts';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
@@ -26,7 +26,6 @@ export default function AnalyticsScreen() {
     const today = format(new Date(), 'yyyy-MM-dd');
     const month = format(new Date(), 'yyyy-MM');
 
-    // Tasks
     const { data: allTasks } = await supabase.from('tasks').select('*').eq('user_id', uid);
     const { data: excs } = await supabase.from('task_exceptions').select('*').eq('user_id', uid);
     const { data: ovs } = await supabase.from('task_completion_overrides').select('*').eq('user_id', uid);
@@ -39,7 +38,6 @@ export default function AnalyticsScreen() {
       todayCompleted: todayExpanded.filter((t) => t.completed).length,
     });
 
-    // Week chart
     const week: { day: string; tasks: number; completed: number }[] = [];
     for (let i = 6; i >= 0; i--) {
       const date = format(subDays(new Date(), i), 'yyyy-MM-dd');
@@ -52,7 +50,6 @@ export default function AnalyticsScreen() {
     }
     setWeekData(week);
 
-    // Habits
     const { data: habits } = await supabase.from('habits').select('*').eq('user_id', uid);
     const { data: habitLogs } = await supabase
       .from('habit_logs').select('*').eq('user_id', uid)
@@ -62,7 +59,6 @@ export default function AnalyticsScreen() {
       completionsThisMonth: habitLogs?.filter((l) => l.completed).length ?? 0,
     });
 
-    // Time entries this month
     const { data: timeEntries } = await supabase
       .from('time_entries').select('*').eq('user_id', uid)
       .gte('date', `${month}-01`).lte('date', `${month}-31`);
@@ -90,7 +86,6 @@ export default function AnalyticsScreen() {
     setTimeStats({ total: Math.floor(total / 60), productive: Math.floor(prod / 60), nonProductive: Math.floor(nonProd / 60), neutral: Math.floor(neutral / 60) });
     setCategoryData(Object.entries(byCat).map(([name, minutes]) => ({ name, minutes: Math.floor(minutes / 60) })));
 
-    // Goals
     const { data: mg } = await supabase.from('monthly_goals').select('*').eq('user_id', uid).eq('month', month);
     const { data: yg } = await supabase.from('yearly_goals').select('*').eq('user_id', uid).eq('year', format(new Date(), 'yyyy'));
     setGoalStats({
@@ -111,61 +106,65 @@ export default function AnalyticsScreen() {
     { name: 'Non-Productive', value: timeStats.nonProductive },
     { name: 'Neutral', value: timeStats.neutral },
   ].filter((d) => d.value > 0);
-  const pieColors = ['#22c55e', '#ef4444', '#f59e0b'];
+  const pieColors = ['#16a34a', '#dc2626', '#d97706'];
+
+  const StatCard = ({ icon, label, value, sublabel, color }: { icon: React.ReactNode; label: string; value: string; sublabel?: string; color: string }) => (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md animate-fade-in">
+      <div className="mb-2 flex items-center gap-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: `${color}15` }}>
+          {icon}
+        </div>
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+      </div>
+      <p className="text-2xl font-bold tracking-tight text-slate-800">{value}</p>
+      {sublabel && <p className="text-xs text-slate-400 mt-0.5">{sublabel}</p>}
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-6">
       {/* Stat Cards */}
-      <div className="mb-6 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <CheckCircle2 className="h-5 w-5" style={{ color: theme.primary }} />
-            <span className="text-sm font-semibold text-slate-600">Tasks Today</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">
-            {taskStats.todayCompleted}<span className="text-base text-slate-400">/{taskStats.todayTotal}</span>
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" style={{ color: theme.primary }} />
-            <span className="text-sm font-semibold text-slate-600">Completion</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{completionRate}%</p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <Flame className="h-5 w-5" style={{ color: '#f97316' }} />
-            <span className="text-sm font-semibold text-slate-600">Habit Logs</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{habitStats.completionsThisMonth}</p>
-          <p className="text-xs text-slate-400">this month</p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <div className="mb-2 flex items-center gap-2">
-            <Clock className="h-5 w-5" style={{ color: theme.primary }} />
-            <span className="text-sm font-semibold text-slate-600">Time Tracked</span>
-          </div>
-          <p className="text-2xl font-bold text-slate-800">{timeStats.total}h</p>
-          <p className="text-xs text-slate-400">this month</p>
-        </div>
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <StatCard
+          icon={<CheckCircle2 className="h-4 w-4" style={{ color: theme.primary }} />}
+          label="Tasks Today"
+          value={`${taskStats.todayCompleted}/${taskStats.todayTotal}`}
+          color={theme.primary}
+        />
+        <StatCard
+          icon={<TrendingUp className="h-4 w-4" style={{ color: theme.primary }} />}
+          label="Completion"
+          value={`${completionRate}%`}
+          color={theme.primary}
+        />
+        <StatCard
+          icon={<Flame className="h-4 w-4" style={{ color: '#f97316' }} />}
+          label="Habit Logs"
+          value={`${habitStats.completionsThisMonth}`}
+          sublabel="this month"
+          color="#f97316"
+        />
+        <StatCard
+          icon={<Clock className="h-4 w-4" style={{ color: theme.primary }} />}
+          label="Time Tracked"
+          value={`${timeStats.total}h`}
+          sublabel="this month"
+          color={theme.primary}
+        />
       </div>
 
       {/* Goals Progress */}
-      <div className="mb-6 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
           <div className="mb-2 flex items-center gap-2">
-            <Target className="h-5 w-5" style={{ color: theme.primary }} />
-            <span className="text-sm font-semibold text-slate-600">Monthly Goals</span>
+            <Target className="h-4 w-4" style={{ color: theme.primary }} />
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Monthly</span>
           </div>
-          <p className="text-2xl font-bold text-slate-800">
+          <p className="text-2xl font-bold tracking-tight text-slate-800">
             {goalStats.monthlyCompleted}<span className="text-base text-slate-400">/{goalStats.monthlyTotal}</span>
           </p>
-          <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
-            <div className="h-full rounded-full transition-all"
+          <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${goalStats.monthlyTotal > 0 ? (goalStats.monthlyCompleted / goalStats.monthlyTotal) * 100 : 0}%`,
                 background: `linear-gradient(90deg, ${theme.primary}, ${theme.secondary})`,
@@ -173,17 +172,16 @@ export default function AnalyticsScreen() {
             />
           </div>
         </div>
-
-        <div className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
           <div className="mb-2 flex items-center gap-2">
-            <Target className="h-5 w-5" style={{ color: theme.primary }} />
-            <span className="text-sm font-semibold text-slate-600">Yearly Goals</span>
+            <Target className="h-4 w-4" style={{ color: theme.primary }} />
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Yearly</span>
           </div>
-          <p className="text-2xl font-bold text-slate-800">
+          <p className="text-2xl font-bold tracking-tight text-slate-800">
             {goalStats.yearlyCompleted}<span className="text-base text-slate-400">/{goalStats.yearlyTotal}</span>
           </p>
-          <div className="mt-2 h-2 rounded-full bg-slate-100 overflow-hidden">
-            <div className="h-full rounded-full transition-all"
+          <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${goalStats.yearlyTotal > 0 ? (goalStats.yearlyCompleted / goalStats.yearlyTotal) * 100 : 0}%`,
                 background: `linear-gradient(90deg, ${theme.primary}, ${theme.secondary})`,
@@ -194,32 +192,33 @@ export default function AnalyticsScreen() {
       </div>
 
       {/* Week Chart */}
-      <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-        <h3 className="mb-4 font-semibold text-slate-700">Task Completion (Last 7 Days)</h3>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={weekData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-            <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+      <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
+        <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Task Completion (Last 7 Days)</h3>
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={weekData} barGap={4}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+            <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip
-              contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13px' }}
+              contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
+              cursor={{ fill: '#f8fafc' }}
             />
-            <Bar dataKey="tasks" fill={theme.primary} radius={[6, 6, 0, 0]} name="Total" />
-            <Bar dataKey="completed" fill="#22c55e" radius={[6, 6, 0, 0]} name="Completed" />
+            <Bar dataKey="tasks" fill={theme.primary} radius={[4, 4, 0, 0]} name="Total" maxBarSize={28} />
+            <Bar dataKey="completed" fill="#22c55e" radius={[4, 4, 0, 0]} name="Completed" maxBarSize={28} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Time Pie Chart */}
       {pieData.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <h3 className="mb-4 font-semibold text-slate-700">Time Breakdown (This Month)</h3>
-          <ResponsiveContainer width="100%" height={250}>
+        <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
+          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Time Breakdown (This Month)</h3>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={(e: any) => `${e.name}: ${e.value}h`}>
+              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={40} paddingAngle={2} label={(e: any) => `${e.name}: ${e.value}h`}>
                 {pieData.map((_, i) => <Cell key={i} fill={pieColors[i]} />)}
               </Pie>
-              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13px' }} />
+              <Tooltip contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -227,18 +226,19 @@ export default function AnalyticsScreen() {
 
       {/* Category Bar Chart */}
       {categoryData.length > 0 && (
-        <div className="mb-6 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm">
-          <h3 className="mb-4 font-semibold text-slate-700">Time by Category (This Month)</h3>
-          <ResponsiveContainer width="100%" height={Math.max(150, categoryData.length * 50)}>
-            <BarChart data={categoryData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis type="number" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={80} />
+        <div className="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm animate-fade-in">
+          <h3 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-500">Time by Category (This Month)</h3>
+          <ResponsiveContainer width="100%" height={Math.max(140, categoryData.length * 44)}>
+            <BarChart data={categoryData} layout="vertical" barSize={20}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} width={80} />
               <Tooltip
-                contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '13px' }}
+                contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
                 formatter={(v: number) => [`${v}h`, 'Hours']}
+                cursor={{ fill: '#f8fafc' }}
               />
-              <Bar dataKey="minutes" fill={theme.primary} radius={[0, 6, 6, 0]} name="Hours" />
+              <Bar dataKey="minutes" fill={theme.primary} radius={[0, 4, 4, 0]} name="Hours" />
             </BarChart>
           </ResponsiveContainer>
         </div>

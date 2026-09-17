@@ -29,28 +29,30 @@ export default function MainApp() {
   };
 
   return (
-    <div className="flex h-screen w-full flex-col bg-slate-50">
+    <div className="flex h-screen w-full flex-col bg-slate-100">
       <header
-        className="flex items-center justify-between px-6 py-4 shadow-md"
+        className="relative flex items-center justify-between px-5 py-4 shadow-sm transition-all duration-500"
         style={{ background: `linear-gradient(135deg, ${gradientMap[activeTab][0]}, ${gradientMap[activeTab][1]})` }}
       >
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-white">TaskFlow Life</h1>
+        <div className="flex items-center gap-2.5">
+          <h1 className="text-lg font-bold tracking-tight text-white">TaskFlow Life</h1>
         </div>
-        <div className="text-sm font-medium text-white/80">
+        <div className="text-xs font-medium text-white/70 uppercase tracking-wider">
           {tabs.find((t) => t.key === activeTab)?.label}
         </div>
       </header>
 
       <main className="flex-1 overflow-y-auto">
-        {activeTab === 'tasks' && <TasksScreen />}
-        {activeTab === 'habits' && <HabitsScreen />}
-        {activeTab === 'time' && <TimeEntryScreen />}
-        {activeTab === 'analytics' && <AnalyticsScreen />}
-        {activeTab === 'profile' && <ProfileScreen />}
+        <div key={activeTab} className="animate-fade-in">
+          {activeTab === 'tasks' && <TasksScreen />}
+          {activeTab === 'habits' && <HabitsScreen />}
+          {activeTab === 'time' && <TimeEntryScreen />}
+          {activeTab === 'analytics' && <AnalyticsScreen />}
+          {activeTab === 'profile' && <ProfileScreen />}
+        </div>
       </main>
 
-      <nav className="flex items-center justify-around border-t border-slate-200 bg-white px-2 py-2 shadow-lg">
+      <nav className="flex items-center justify-around border-t border-slate-200 bg-white px-2 py-1.5 shadow-sm">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.key;
           const Icon = tab.icon;
@@ -58,15 +60,20 @@ export default function MainApp() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className="group flex flex-1 flex-col items-center gap-1 py-2 transition"
+              className="group flex flex-1 flex-col items-center gap-0.5 py-2 transition-all duration-200"
             >
-              <Icon
-                className="h-6 w-6 transition"
-                style={{ color: isActive ? theme.primary : '#94a3b8' }}
-                strokeWidth={isActive ? 2.5 : 2}
-              />
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-lg transition-all duration-200"
+                style={isActive ? { background: `${theme.primary}15` } : {}}
+              >
+                <Icon
+                  className="h-5 w-5 transition-all duration-200"
+                  style={{ color: isActive ? theme.primary : '#94a3b8' }}
+                  strokeWidth={isActive ? 2.5 : 2}
+                />
+              </div>
               <span
-                className="text-xs font-medium transition"
+                className="text-[10px] font-semibold uppercase tracking-wide transition-all duration-200"
                 style={{ color: isActive ? theme.primary : '#94a3b8' }}
               >
                 {tab.label}

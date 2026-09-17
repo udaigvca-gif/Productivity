@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CheckSquare, Calendar, Trophy, Flame, Clock, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { CheckSquare, Calendar, Trophy, Flame, Clock, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -30,49 +30,53 @@ export default function AuthScreen() {
 
   return (
     <div
-      className="flex min-h-screen w-full items-center justify-center p-6"
+      className="relative flex min-h-screen w-full items-center justify-center overflow-hidden p-6"
       style={{ background: `linear-gradient(135deg, ${theme.loginGradient[0]}, ${theme.loginGradient[1]}, ${theme.loginGradient[2]})` }}
     >
-      <div className="w-full max-w-md animate-scale-in rounded-3xl bg-white/95 p-8 shadow-2xl backdrop-blur-xl">
-        <div className="mb-8 text-center">
+      {/* Decorative orbs */}
+      <div className="pointer-events-none absolute -top-32 -right-32 h-96 w-96 rounded-full opacity-20 blur-3xl" style={{ background: theme.primary }} />
+      <div className="pointer-events-none absolute -bottom-40 -left-32 h-96 w-96 rounded-full opacity-15 blur-3xl" style={{ background: theme.secondary }} />
+
+      <div className="relative w-full max-w-md animate-scale-in rounded-3xl bg-white/95 p-8 shadow-2xl backdrop-blur-xl border border-white/20">
+        <div className="mb-7 text-center">
           <div
-            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl"
+            className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg"
             style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
           >
             <CheckSquare className="h-8 w-8 text-white" strokeWidth={2.5} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800">TaskFlow Life</h1>
-          <p className="mt-2 text-slate-500">Organize tasks, track habits, achieve goals</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800">TaskFlow Life</h1>
+          <p className="mt-1.5 text-sm text-slate-500">Organize tasks, track habits, achieve goals</p>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-3">
+        <div className="mb-6 grid grid-cols-2 gap-2.5">
           {[
             { icon: Calendar, label: 'Tasks' },
             { icon: Trophy, label: 'Goals' },
             { icon: Flame, label: 'Habits' },
             { icon: Clock, label: 'Time' },
           ].map((f) => (
-            <div key={f.label} className="flex items-center gap-2 rounded-xl bg-slate-50 p-3">
-              <f.icon className="h-5 w-5" style={{ color: theme.primary }} />
-              <span className="text-sm font-medium text-slate-600">{f.label}</span>
+            <div key={f.label} className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 transition-colors hover:bg-slate-50">
+              <f.icon className="h-4 w-4" style={{ color: theme.primary }} strokeWidth={2} />
+              <span className="text-xs font-medium text-slate-600">{f.label}</span>
             </div>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="email"
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 text-slate-700 outline-none transition focus:border-slate-400"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
           </div>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
               type="password"
               placeholder="Password"
@@ -80,32 +84,32 @@ export default function AuthScreen() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full rounded-xl border border-slate-200 py-3 pl-11 pr-4 text-slate-700 outline-none transition focus:border-slate-400"
+              className="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-4 text-sm text-slate-700 outline-none transition-all duration-200 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
             />
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600 border border-red-100">{error}</div>
           )}
 
           <button
             type="submit"
             disabled={busy}
-            className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-60"
+            className="w-full rounded-xl py-3 font-semibold text-white shadow-lg transition-all duration-200 hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:active:scale-100"
             style={{ background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})` }}
           >
             {busy ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-5 text-center text-sm text-slate-500">
           {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
           <button
             onClick={() => {
               setMode(mode === 'signin' ? 'signup' : 'signin');
               setError('');
             }}
-            className="font-semibold hover:underline"
+            className="font-semibold transition-colors hover:underline"
             style={{ color: theme.primary }}
           >
             {mode === 'signin' ? 'Sign Up' : 'Sign In'}
